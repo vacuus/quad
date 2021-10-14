@@ -24,3 +24,8 @@ ___
 Licensed under the [MIT License](https://opensource.org/licenses/MIT)
 
 Disclaimer (inspired by that of Quinn): This software is in no way affiliated with or sponsored by The Tetris Company, nor is it part of their Tetris line of products
+___
+
+CAVEAT:
+* .cargo/config: Custom linker and unstable share-generics feature, both of which improve performance, are disabled by default
+* Remember to use 'cargo run --release'/'cargo build --release' if you're a user
