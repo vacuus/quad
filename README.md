@@ -7,7 +7,10 @@ I could've used [Macroquad](https://macroquad.rs/) (and what a naming intrigue t
 Simply meant to demonstrate features I like (but feel free to mention preferences as issues)
 ___
 
-TODO: 
+TODO:
+* Get it to run
+
+(long term)
 * Screenshots of running program
 * Documentation
 
