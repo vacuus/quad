@@ -71,7 +71,7 @@ impl Block {
 }
 
 fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>
 ) {
     let matrix = Matrix {
@@ -82,7 +82,7 @@ fn setup(
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
 
-    spawn_current_tetromino(commands, &matrix, &mut materials);
+    spawn_current_tetromino(&mut commands, &matrix, &mut materials);
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -112,7 +112,7 @@ fn print_info(
 }
 
 fn move_current_tetromino(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
@@ -142,7 +142,7 @@ fn move_current_tetromino(
         }
 
         for matrix in matrix_query.iter_mut() {
-            spawn_current_tetromino(commands, matrix, &mut materials);
+            spawn_current_tetromino(&mut commands, matrix, &mut materials);
         }
 
         return;
@@ -247,7 +247,7 @@ fn move_current_tetromino(
             }
 
             for matrix in matrix_query.iter_mut() {
-                spawn_current_tetromino(commands, matrix, &mut materials);
+                spawn_current_tetromino(&mut commands, matrix, &mut materials);
             }
         }
 
