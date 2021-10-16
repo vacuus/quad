@@ -90,7 +90,7 @@ fn setup(
             sprite: Sprite::new(Vec2::new(matrix.width as f32 * Block::SIZE, matrix.height as f32 * Block::SIZE)),
             ..Default::default()
         })
-        .with(matrix)
+        .insert(matrix)
     ;
 }
 
@@ -334,12 +334,12 @@ fn spawn_current_tetromino(
                 transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
                 ..Default::default()
             })
-            .with(CurrentTetromino)
-            .with(MatrixPosition {
+            .insert(CurrentTetromino)
+            .insert(MatrixPosition {
                 x: block.1.index.x + 3,
                 y: matrix.height - tetromino_matrix_size + block.1.index.y,
             })
-            .with_bundle(block)
+            .insert_bundle(block)
         ;
     }
 }
