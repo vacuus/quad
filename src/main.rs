@@ -446,7 +446,7 @@ impl Tetromino {
 
 impl Distribution<TetrominoType> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
-        match rng.gen_range(0, 7) {
+        match rng.gen_range(0..7) {
             0 => TetrominoType::I,
             1 => TetrominoType::O,
             2 => TetrominoType::T,
