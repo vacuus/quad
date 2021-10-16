@@ -100,7 +100,7 @@ fn print_info(
     mut matrix_query: Query<(&Matrix, &Sprite, &Transform)>,
     mut current_query: Query<(Entity, &MatrixPosition, &Tetromino, &CurrentTetromino)>
 ) {
-    timer.0.tick(time.delta_seconds());
+    timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
         for (entity, position, tetromino, _current) in current_query.iter_mut() {
@@ -149,7 +149,7 @@ fn move_current_tetromino(
     }
 
     // Movement
-    soft_drop_timer.0.tick(time.delta_seconds());
+    soft_drop_timer.0.tick(time.delta());
 
     let mut move_x = 0;
     let mut move_y = 0;
