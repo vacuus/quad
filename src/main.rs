@@ -138,8 +138,9 @@ fn move_current_tetromino(
 
         for (entity, mut position, _tetromino, _current) in current_query.iter_mut() {
             position.y += 1;
-            commands.remove_one::<CurrentTetromino>(entity);
-            commands.insert_one(entity, Heap);
+            commands.entity(entity)
+                .remove::<CurrentTetromino>()
+                .insert(Heap);
         }
 
         for matrix in matrix_query.iter_mut() {
@@ -242,8 +243,9 @@ fn move_current_tetromino(
         } else {
             // Revert movement and add to heap
             for (entity, _position, _tetromino, _current) in current_query.iter_mut() {
-                commands.remove_one::<CurrentTetromino>(entity);
-                commands.insert_one(entity, Heap);
+                commands.entity(entity)
+                    .remove::<CurrentTetromino>()
+                    .insert(Heap);
             }
 
             for matrix in matrix_query.iter_mut() {
