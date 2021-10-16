@@ -10,8 +10,8 @@ use std::collections::HashMap;
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .add_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
-        .add_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
+        .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
+        .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
         .add_startup_system(setup.system())
         .add_system(print_info.system())
         .add_system(move_current_tetromino.system())
