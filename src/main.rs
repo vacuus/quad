@@ -80,14 +80,14 @@ fn setup(
     };
 
     commands
-        .spawn(Camera2dBundle::default())
-        .spawn(CameraUiBundle::default())
+        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .insert_bundle(UiCameraBundle::default())
     ;
 
     spawn_current_tetromino(commands, &matrix, &mut materials);
 
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
             sprite: Sprite::new(Vec2::new(matrix.width as f32 * Block::SIZE, matrix.height as f32 * Block::SIZE)),
             ..Default::default()
@@ -324,11 +324,11 @@ fn spawn_current_tetromino(
     for block in blocks.into_iter() {
         let tetromino_matrix_size = Tetromino::SIZES[block.1.tetromino_type as usize];
         commands
-            .spawn(SpriteBundle {
+            .spawn_bundle(SpriteBundle {
                 material: materials.add(Color::rgb(
                     block.0.color.r(),
                     block.0.color.g(),
-                    block.0.color.b()
+                    block.0.color.b(),
                 ).into()),
                 sprite: Sprite::new(Vec2::new(Block::SIZE, Block::SIZE)),
                 transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
