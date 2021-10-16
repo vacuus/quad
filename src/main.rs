@@ -79,10 +79,8 @@ fn setup(
         height: 22,
     };
 
-    commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
-        .insert_bundle(UiCameraBundle::default())
-    ;
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default());
 
     spawn_current_tetromino(commands, &matrix, &mut materials);
 
