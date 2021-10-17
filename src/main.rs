@@ -12,12 +12,19 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
+        .add_event::<AttemptMoveEvent>()
+        .add_event::<IllegalMoveEvent>()
         .add_startup_system(setup.system())
         .add_system(print_info.system())
-        .add_system(move_current_tetromino.system())
         .add_system(update_block_sprites.system())
+        .add_system(move_current_tetromino.system().label("attempt move"))
+        .add_system(check_tetromino_positions.system().after("attempt move"))
         .run();
 }
+
+struct AttemptMoveEvent;
+
+struct IllegalMoveEvent;
 
 struct SoftDropTimer(Timer);
 
@@ -116,6 +123,8 @@ fn move_current_tetromino(
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     keyboard_input: Res<Input<KeyCode>>,
+    mut attempt_move_notify: EventWriter<AttemptMoveEvent>,
+    mut illegal_move_receive: EventReader<IllegalMoveEvent>,
     mut matrix_query: Query<&Matrix>,
     mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino), With<CurrentTetromino>>,
     mut heap_query: Query<(&mut MatrixPosition, &Heap)>
@@ -126,11 +135,17 @@ fn move_current_tetromino(
         prev_positions.insert(entity.id(), (position.x, position.y));
     }
 
+    let mut can_move = || {
+        attempt_move_notify.send(AttemptMoveEvent);
+        illegal_move_receive.iter().next().is_none()
+    };
+
     if keyboard_input.just_pressed(KeyCode::I) || keyboard_input.just_pressed(KeyCode::Up) {
-        while check_tetromino_positions(&mut current_query, &mut heap_query) {
-            for (_entity, mut position, _tetromino) in current_query.iter_mut() {
-                position.y -= 1;
+        for (_entity, mut position, _tetromino) in current_query.iter_mut() {
+            if !can_move() {
+                break;
             }
+            position.y -= 1;
         }
 
         for (entity, mut position, _tetromino) in current_query.iter_mut() {
@@ -213,7 +228,7 @@ fn move_current_tetromino(
 
     // TODO: Probably better off setting the matrix up so you can index into it to look for occupied spots around the current tetromino
     // Check if any blocks in tetromino are overlapping with heap
-    if !check_tetromino_positions(&mut current_query, &mut heap_query) {
+    if !can_move() {
         let mut should_revert = true;
 
         if let Some(_) = should_rotate {
@@ -232,7 +247,7 @@ fn move_current_tetromino(
                     position.y += try_move.1;
                 }
 
-                if check_tetromino_positions(&mut current_query, &mut heap_query) {
+                if can_move() {
                     should_revert = false;
                     break;
                 }
@@ -296,19 +311,29 @@ fn rotate_tetromino_block(tetromino_block: &mut Tetromino, matrix_size: i32, clo
 }
 
 fn check_tetromino_positions(
-    current_query: &mut Query<&MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
-    heap_query: &mut Query<&MatrixPosition, With<Heap>>
-) -> bool {
-    current_query
-        .iter_mut()
+    mut illegal_move_notify: EventWriter<IllegalMoveEvent>,
+    mut attempt_move_receive: EventReader<AttemptMoveEvent>,
+    current_query: Query<&MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
+    heap_query: Query<&MatrixPosition, With<Heap>>
+) {
+    if attempt_move_receive.iter().next().is_none() {
+        return;
+    }
+
+    let can_move = current_query
+        .iter()
         .all(|position| {
             position.y >= 0 &&
             heap_query
-                .iter_mut()
+                .iter()
                 .all(|heap_position| {
                     *position != *heap_position
                 })
-        })
+        });
+
+    if !can_move {
+        illegal_move_notify.send(IllegalMoveEvent);
+    }
 } 
 
 fn spawn_current_tetromino(
