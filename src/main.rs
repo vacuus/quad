@@ -34,7 +34,7 @@ struct Matrix {
 }
 
 // Holds a block's position within a tetromino for rotation
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct MatrixPosition {
     x: i32,
     y: i32,
@@ -296,23 +296,20 @@ fn rotate_tetromino_block(tetromino_block: &mut Tetromino, matrix_size: i32, clo
 }
 
 fn check_tetromino_positions(
-    current_query: &mut Query<&mut MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
-    heap_query: &mut Query<&mut MatrixPosition, With<Heap>>
+    current_query: &mut Query<&MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
+    heap_query: &mut Query<&MatrixPosition, With<Heap>>
 ) -> bool {
-    for position in current_query.iter_mut() {
-        if position.y < 0 {
-            return false;
-        }
-
-        for heap_position in heap_query.iter_mut() {
-            if position.x == heap_position.x && position.y == heap_position.y {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
+    current_query
+        .iter_mut()
+        .all(|position| {
+            position.y >= 0 &&
+            heap_query
+                .iter_mut()
+                .all(|heap_position| {
+                    *position != *heap_position
+                })
+        })
+} 
 
 fn spawn_current_tetromino(
     commands: &mut Commands,
