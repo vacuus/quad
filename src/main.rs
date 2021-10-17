@@ -97,13 +97,12 @@ fn setup(
 fn print_info(
     time: Res<Time>,
     mut timer: ResMut<PrintInfoTimer>,
-    mut matrix_query: Query<(&Matrix, &Sprite, &Transform)>,
-    mut current_query: Query<(Entity, &MatrixPosition, &Tetromino, &CurrentTetromino)>
+    mut current_query: Query<(Entity, &MatrixPosition, &Tetromino), With<CurrentTetromino>>
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
-        for (entity, position, tetromino, _current) in current_query.iter_mut() {
+        for (entity, position, tetromino) in current_query.iter_mut() {
             println!("Current matrix_pos: {:?}", position);
             println!("Current tetromino: {:?}", tetromino);
             println!("{:?}", entity);
@@ -118,23 +117,23 @@ fn move_current_tetromino(
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     keyboard_input: Res<Input<KeyCode>>,
     mut matrix_query: Query<&Matrix>,
-    mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino, &CurrentTetromino)>,
+    mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino), With<CurrentTetromino>>,
     mut heap_query: Query<(&mut MatrixPosition, &Heap)>
 ) {
     // Store current positions in map by entity ID
     let mut prev_positions: HashMap<u32, (i32, i32)> = HashMap::new();
-    for (entity, position, _tetromino, _current) in current_query.iter_mut() {
+    for (entity, position, _tetromino) in current_query.iter_mut() {
         prev_positions.insert(entity.id(), (position.x, position.y));
     }
 
     if keyboard_input.just_pressed(KeyCode::I) || keyboard_input.just_pressed(KeyCode::Up) {
         while check_tetromino_positions(&mut current_query, &mut heap_query) {
-            for (_entity, mut position, _tetromino, _current) in current_query.iter_mut() {
+            for (_entity, mut position, _tetromino) in current_query.iter_mut() {
                 position.y -= 1;
             }
         }
 
-        for (entity, mut position, _tetromino, _current) in current_query.iter_mut() {
+        for (entity, mut position, _tetromino) in current_query.iter_mut() {
             position.y += 1;
             commands.entity(entity)
                 .remove::<CurrentTetromino>()
@@ -177,7 +176,7 @@ fn move_current_tetromino(
     let mut x_over = 0;
     let mut y_over = 0;
 
-    for (_entity, mut position, mut tetromino, _current) in current_query.iter_mut() {
+    for (_entity, mut position, mut tetromino) in current_query.iter_mut() {
         let mut move_x = move_x;
         let mut move_y = move_y;
 
@@ -207,7 +206,7 @@ fn move_current_tetromino(
         position.y += move_y;
     }
 
-    for (_entity, mut position, mut tetromino, _current) in current_query.iter_mut() {
+    for (_entity, mut position, mut tetromino) in current_query.iter_mut() {
         position.x -= x_over;
         position.y -= y_over;
     }
@@ -228,7 +227,7 @@ fn move_current_tetromino(
             ];
 
             for try_move in try_moves.iter() {
-                for (_entity, mut position, _tetromino, _current) in current_query.iter_mut() {
+                for (_entity, mut position, _tetromino) in current_query.iter_mut() {
                     position.x += try_move.0;
                     position.y += try_move.1;
                 }
@@ -240,7 +239,7 @@ fn move_current_tetromino(
             }
         } else {
             // Revert movement and add to heap
-            for (entity, _position, _tetromino, _current) in current_query.iter_mut() {
+            for (entity, _position, _tetromino) in current_query.iter_mut() {
                 commands.entity(entity)
                     .remove::<CurrentTetromino>()
                     .insert(Heap);
@@ -252,7 +251,7 @@ fn move_current_tetromino(
         }
 
         if should_revert {
-            for (entity, mut position, _tetromino, _current) in current_query.iter_mut() {
+            for (entity, mut position, _tetromino) in current_query.iter_mut() {
                 let prev_position = prev_positions.get(&entity.id()).unwrap();
                 position.x = prev_position.0;
                 position.y = prev_position.1;
@@ -262,10 +261,10 @@ fn move_current_tetromino(
 }
 
 fn update_block_sprites(
-    mut matrix_query: Query<(&Matrix, &Sprite)>,
+    mut matrix_query: Query<&Sprite, With<Matrix>>,
     mut block_query: Query<(&MatrixPosition, &mut Transform)>
 ) {
-    for (_matrix, matrix_sprite) in matrix_query.iter_mut() {
+    for matrix_sprite in matrix_query.iter_mut() {
         for (position, mut transform) in block_query.iter_mut() {
             let new_x: f32 = ((position.x as f32 * Block::SIZE) - (matrix_sprite.size.x * 0.5)) + (Block::SIZE * 0.5);
             let new_y: f32 = (matrix_sprite.size.y * -0.5) + (position.y as f32 * Block::SIZE) + (Block::SIZE * 0.5);
@@ -297,15 +296,15 @@ fn rotate_tetromino_block(tetromino_block: &mut Tetromino, matrix_size: i32, clo
 }
 
 fn check_tetromino_positions(
-    current_query: &mut Query<(Entity, &mut MatrixPosition, &mut Tetromino, &CurrentTetromino)>,
-    heap_query: &mut Query<(&mut MatrixPosition, &Heap)>
+    current_query: &mut Query<&mut MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
+    heap_query: &mut Query<&mut MatrixPosition, With<Heap>>
 ) -> bool {
-    for (_entity, position, _tetromino, _current) in current_query.iter_mut() {
+    for position in current_query.iter_mut() {
         if position.y < 0 {
             return false;
         }
 
-        for (heap_position, _heap) in heap_query.iter_mut() {
+        for heap_position in heap_query.iter_mut() {
             if position.x == heap_position.x && position.y == heap_position.y {
                 return false;
             }
