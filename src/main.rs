@@ -1,11 +1,8 @@
-use bevy::{
-    prelude::*,
-};
+use bevy::prelude::*;
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-use std::collections::HashMap;
 
 fn main() {
     App::build()
@@ -129,36 +126,31 @@ fn move_current_tetromino(
     mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino), With<CurrentTetromino>>,
     mut heap_query: Query<(&mut MatrixPosition, &Heap)>
 ) {
-    // Store current positions in map by entity ID
-    let mut prev_positions: HashMap<u32, (i32, i32)> = HashMap::new();
-    for (entity, position, _tetromino) in current_query.iter_mut() {
-        prev_positions.insert(entity.id(), (position.x, position.y));
-    }
+    
+    // There is only one entity with 'CurrentTetromino' as a component at a time
+    // ^^^ For now, this is a lie; the message of the commit right after
+    // commit 4aaaff201863f965f061471a52c16b215d2bbc65 explains this
+    let (entity, mut position, mut curr_tetromino) = current_query.single_mut().unwrap();
+    let prev_position = (position.x, position.y);
+    let matrix = matrix_query.single().unwrap();
 
     let mut can_move = || {
         attempt_move_notify.send(AttemptMoveEvent);
         illegal_move_receive.iter().next().is_none()
     };
 
+    // Hard drop
     if keyboard_input.just_pressed(KeyCode::I) || keyboard_input.just_pressed(KeyCode::Up) {
-        for (_entity, mut position, _tetromino) in current_query.iter_mut() {
-            if !can_move() {
-                break;
-            }
+        while can_move() {
             position.y -= 1;
         }
 
-        for (entity, mut position, _tetromino) in current_query.iter_mut() {
-            position.y += 1;
-            commands.entity(entity)
-                .remove::<CurrentTetromino>()
-                .insert(Heap);
-        }
+        position.y += 1;
+        commands.entity(entity)
+            .remove::<CurrentTetromino>()
+            .insert(Heap);
 
-        for matrix in matrix_query.iter_mut() {
-            spawn_current_tetromino(&mut commands, matrix, &mut materials);
-        }
-
+        spawn_current_tetromino(&mut commands, matrix, &mut materials);
         return;
     }
 
@@ -191,40 +183,31 @@ fn move_current_tetromino(
     let mut x_over = 0;
     let mut y_over = 0;
 
-    for (_entity, mut position, mut tetromino) in current_query.iter_mut() {
-        let mut move_x = move_x;
-        let mut move_y = move_y;
+    // Rotation
+    if let Some(clockwise) = should_rotate {
+        let prev_index_x = tetromino.index.x;
+        let prev_index_y = tetromino.index.y;
 
-        // Rotation
-        if let Some(clockwise) = should_rotate {
-            let prev_index_x = tetromino.index.x;
-            let prev_index_y = tetromino.index.y;
+        let matrix_size = Tetromino::SIZES[tetromino.tetromino_type as usize];
+        rotate_tetromino_block(&mut tetromino, matrix_size, clockwise);
 
-            let matrix_size = Tetromino::SIZES[tetromino.tetromino_type as usize];
-            rotate_tetromino_block(&mut tetromino, matrix_size, clockwise);
-
-            move_x += tetromino.index.x - prev_index_x;
-            move_y += tetromino.index.y - prev_index_y;
-        }
-
-        // Bounds
-        for matrix in matrix_query.iter_mut() {
-            if position.x + move_x < 0 {
-                x_over = (position.x + move_x).min(x_over);
-
-            } else if position.x + move_x >= matrix.width {
-                x_over = ((position.x + move_x) - matrix.width + 1).max(x_over);
-            }
-        }
-
-        position.x += move_x;
-        position.y += move_y;
+        move_x += tetromino.index.x - prev_index_x;
+        move_y += tetromino.index.y - prev_index_y;
     }
 
-    for (_entity, mut position, mut tetromino) in current_query.iter_mut() {
-        position.x -= x_over;
-        position.y -= y_over;
+    // Bounds
+    if position.x + move_x < 0 {
+        x_over = (position.x + move_x).min(x_over);
+
+    } else if position.x + move_x >= matrix.width {
+        x_over = ((position.x + move_x) - matrix.width + 1).max(x_over);
     }
+
+    position.x += move_x;
+    position.x -= x_over;
+    
+    position.y += move_y;
+    position.y -= y_over;
 
     // TODO: Probably better off setting the matrix up so you can index into it to look for occupied spots around the current tetromino
     // Check if any blocks in tetromino are overlapping with heap
@@ -242,10 +225,8 @@ fn move_current_tetromino(
             ];
 
             for try_move in try_moves.iter() {
-                for (_entity, mut position, _tetromino) in current_query.iter_mut() {
-                    position.x += try_move.0;
-                    position.y += try_move.1;
-                }
+                position.x += try_move.0;
+                position.y += try_move.1;
 
                 if can_move() {
                     should_revert = false;
@@ -254,23 +235,16 @@ fn move_current_tetromino(
             }
         } else {
             // Revert movement and add to heap
-            for (entity, _position, _tetromino) in current_query.iter_mut() {
-                commands.entity(entity)
-                    .remove::<CurrentTetromino>()
-                    .insert(Heap);
-            }
+            commands.entity(entity)
+                .remove::<CurrentTetromino>()
+                .insert(Heap);
 
-            for matrix in matrix_query.iter_mut() {
-                spawn_current_tetromino(&mut commands, matrix, &mut materials);
-            }
+            spawn_current_tetromino(&mut commands, matrix, &mut materials);
         }
 
         if should_revert {
-            for (entity, mut position, _tetromino) in current_query.iter_mut() {
-                let prev_position = prev_positions.get(&entity.id()).unwrap();
-                position.x = prev_position.0;
-                position.y = prev_position.1;
-            }
+            position.x = prev_position.0;
+            position.y = prev_position.1;
         }
     }
 }
@@ -279,15 +253,15 @@ fn update_block_sprites(
     mut matrix_query: Query<&Sprite, With<Matrix>>,
     mut block_query: Query<(&MatrixPosition, &mut Transform)>
 ) {
-    for matrix_sprite in matrix_query.iter_mut() {
-        for (position, mut transform) in block_query.iter_mut() {
-            let new_x: f32 = ((position.x as f32 * Block::SIZE) - (matrix_sprite.size.x * 0.5)) + (Block::SIZE * 0.5);
-            let new_y: f32 = (matrix_sprite.size.y * -0.5) + (position.y as f32 * Block::SIZE) + (Block::SIZE * 0.5);
+    let matrix = matrix_query.single().unwrap();
+    
+    for (position, mut transform) in block_query.iter_mut() {
+        let new_x: f32 = ((position.x as f32 * Block::SIZE) - (matrix_sprite.size.x * 0.5)) + (Block::SIZE * 0.5);
+        let new_y: f32 = (matrix_sprite.size.y * -0.5) + (position.y as f32 * Block::SIZE) + (Block::SIZE * 0.5);
 
-            let translation = &mut transform.translation;
-            translation.x = new_x;
-            translation.y = new_y;
-        }
+        let translation = &mut transform.translation;
+        translation.x = new_x;
+        translation.y = new_y;
     }
 }
 
