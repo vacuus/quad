@@ -3,25 +3,19 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
+use ::std::collections::BTreeSet;
 
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
-        .add_event::<AttemptMoveEvent>()
-        .add_event::<IllegalMoveEvent>()
         .add_startup_system(setup.system())
         .add_system(print_info.system())
         .add_system(update_block_sprites.system())
-        .add_system(move_current_tetromino.system().label("attempt move"))
-        .add_system(check_tetromino_positions.system().after("attempt move"))
+        .add_system(move_current_tetromino.system())
         .run();
 }
-
-struct AttemptMoveEvent;
-
-struct IllegalMoveEvent;
 
 struct SoftDropTimer(Timer);
 
@@ -38,7 +32,7 @@ struct Matrix {
 }
 
 // Holds a block's position within a tetromino for rotation
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct MatrixPosition {
     x: i32,
     y: i32,
@@ -120,11 +114,9 @@ fn move_current_tetromino(
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut attempt_move_notify: EventWriter<AttemptMoveEvent>,
-    mut illegal_move_receive: EventReader<IllegalMoveEvent>,
-    mut matrix_query: Query<&Matrix>,
+    matrix_query: Query<&Matrix>,
     mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino), With<CurrentTetromino>>,
-    mut heap_query: Query<(&mut MatrixPosition, &Heap)>
+    heap_query: Query<&MatrixPosition, (With<Heap>, Without<CurrentTetromino>)>
 ) {
     
     // There is only one entity with 'CurrentTetromino' as a component at a time
@@ -133,15 +125,11 @@ fn move_current_tetromino(
     let (entity, mut position, mut curr_tetromino) = current_query.single_mut().unwrap();
     let prev_position = (position.x, position.y);
     let matrix = matrix_query.single().unwrap();
-
-    let mut can_move = || {
-        attempt_move_notify.send(AttemptMoveEvent);
-        illegal_move_receive.iter().next().is_none()
-    };
+    let heap = heap_query.iter().collect::<BTreeSet<_>>();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I) || keyboard_input.just_pressed(KeyCode::Up) {
-        while can_move() {
+        while can_move(position, heap) {
             position.y -= 1;
         }
 
@@ -211,7 +199,7 @@ fn move_current_tetromino(
 
     // TODO: Probably better off setting the matrix up so you can index into it to look for occupied spots around the current tetromino
     // Check if any blocks in tetromino are overlapping with heap
-    if !can_move() {
+    if !can_move(position, heap) {
         let mut should_revert = true;
 
         if let Some(_) = should_rotate {
@@ -228,7 +216,7 @@ fn move_current_tetromino(
                 position.x += try_move.0;
                 position.y += try_move.1;
 
-                if can_move() {
+                if can_move(position, heap) {
                     should_revert = false;
                     break;
                 }
@@ -284,30 +272,11 @@ fn rotate_tetromino_block(tetromino_block: &mut Tetromino, matrix_size: i32, clo
     }
 }
 
-fn check_tetromino_positions(
-    mut illegal_move_notify: EventWriter<IllegalMoveEvent>,
-    mut attempt_move_receive: EventReader<AttemptMoveEvent>,
-    current_query: Query<&MatrixPosition, With<(Tetromino, CurrentTetromino)>>,
-    heap_query: Query<&MatrixPosition, With<Heap>>
+fn can_move(
+    curr_tetromino_pos: &MatrixPosition,
+    heap: BTreeSet<&MatrixPosition>
 ) {
-    if attempt_move_receive.iter().next().is_none() {
-        return;
-    }
-
-    let can_move = current_query
-        .iter()
-        .all(|position| {
-            position.y >= 0 &&
-            heap_query
-                .iter()
-                .all(|heap_position| {
-                    *position != *heap_position
-                })
-        });
-
-    if !can_move {
-        illegal_move_notify.send(IllegalMoveEvent);
-    }
+    curr_tetromino_pos.y >= 0 && !heap.contains(curr_tetromino_pos)
 } 
 
 fn spawn_current_tetromino(
