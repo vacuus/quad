@@ -112,6 +112,13 @@ fn move_current_tetromino(
     >,
     heap_query: Query<&MatrixPosition, (With<Heap>, Without<CurrentTetromino>)>,
 ) {
+    fn can_move(
+        curr_tetromino_pos: &MatrixPosition,
+        heap: &BTreeSet<&MatrixPosition>,
+    ) -> bool {
+        curr_tetromino_pos.y >= 0 && !heap.contains(curr_tetromino_pos)
+    }
+
     // There is only one entity with 'CurrentTetromino' as a component at a time
     // ^^^ For now, this is a lie; the message of the commit right after
     // commit 4aaaff201863f965f061471a52c16b215d2bbc65 explains this
@@ -242,20 +249,18 @@ fn move_current_tetromino(
 }
 
 fn update_block_sprites(
-    mut matrix_query: Query<&Sprite, With<Matrix>>,
+    matrix_query: Query<&Matrix>,
     mut block_query: Query<(&MatrixPosition, &mut Transform)>,
 ) {
-    let matrix_sprite = matrix_query.single().unwrap();
+    let matrix = matrix_query.single().unwrap();
 
     for (position, mut transform) in block_query.iter_mut() {
-        let new_x: f32 = ((position.x as f32 * Block::SIZE) - (matrix_sprite.size.x * 0.5))
-            + (Block::SIZE * 0.5);
-        let new_y: f32 =
-            (matrix_sprite.size.y * -0.5) + (position.y as f32 * Block::SIZE) + (Block::SIZE * 0.5);
+        let new_x = Block::SIZE * 
+            (position.x as f32 - matrix.width as f32 * 0.5 + 0.5);
+        let new_y = Block::SIZE *
+            (position.y as f32 - matrix.height as f32 * 0.5 + 0.5);
 
-        let translation = &mut transform.translation;
-        translation.x = new_x;
-        translation.y = new_y;
+        *transform = Transform::from_xyz(new_x, new_y, transform.translation.z);
     }
 }
 
@@ -282,13 +287,6 @@ fn rotate_tetromino_block(
     }
 }
 
-fn can_move(
-    curr_tetromino_pos: &MatrixPosition,
-    heap: &BTreeSet<&MatrixPosition>,
-) -> bool {
-    curr_tetromino_pos.y >= 0 && !heap.contains(curr_tetromino_pos)
-}
-
 fn spawn_current_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
@@ -296,7 +294,9 @@ fn spawn_current_tetromino(
 ) {
     let blocks = Tetromino::blocks_from_type(rand::random());
     for block in blocks.into_iter() {
-        let tetromino_matrix_size = Tetromino::SIZES[block.1.tetromino_type as usize];
+        let tetromino_matrix_size =
+            Tetromino::SIZES[block.1.tetromino_type as usize];
+
         commands
             .spawn_bundle(SpriteBundle {
                 material: materials.add(
@@ -406,7 +406,8 @@ impl Tetromino {
         3, // J, orange
     ];
 
-    fn blocks_from_type(tetromino_type: TetrominoType) -> Vec<(Block, Tetromino)> {
+    fn blocks_from_type(tetromino_type: TetrominoType)
+    -> Vec<(Block, Tetromino)> {
         let type_usize = tetromino_type as usize;
         let color = Tetromino::COLORS[type_usize];
 
