@@ -118,18 +118,18 @@ fn move_current_tetromino(
     mut current_query: Query<(Entity, &mut MatrixPosition, &mut Tetromino), With<CurrentTetromino>>,
     heap_query: Query<&MatrixPosition, (With<Heap>, Without<CurrentTetromino>)>
 ) {
-    
     // There is only one entity with 'CurrentTetromino' as a component at a time
     // ^^^ For now, this is a lie; the message of the commit right after
     // commit 4aaaff201863f965f061471a52c16b215d2bbc65 explains this
     let (entity, mut position, mut curr_tetromino) = current_query.single_mut().unwrap();
+    let position = &mut *position;
     let prev_position = (position.x, position.y);
     let matrix = matrix_query.single().unwrap();
     let heap = heap_query.iter().collect::<BTreeSet<_>>();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I) || keyboard_input.just_pressed(KeyCode::Up) {
-        while can_move(position, heap) {
+        while can_move(position, &heap) {
             position.y -= 1;
         }
 
@@ -147,6 +147,7 @@ fn move_current_tetromino(
 
     let mut move_x = 0;
     let mut move_y = 0;
+
     if keyboard_input.just_pressed(KeyCode::J) || keyboard_input.just_pressed(KeyCode::Left) {
         move_x -= 1;
     }
@@ -173,14 +174,15 @@ fn move_current_tetromino(
 
     // Rotation
     if let Some(clockwise) = should_rotate {
-        let prev_index_x = tetromino.index.x;
-        let prev_index_y = tetromino.index.y;
+        let prev_index_x = curr_tetromino.index.x;
+        let prev_index_y = curr_tetromino.index.y;
 
-        let matrix_size = Tetromino::SIZES[tetromino.tetromino_type as usize];
-        rotate_tetromino_block(&mut tetromino, matrix_size, clockwise);
+        let matrix_size =
+            Tetromino::SIZES[curr_tetromino.tetromino_type as usize];
+        rotate_tetromino_block(&mut curr_tetromino, matrix_size, clockwise);
 
-        move_x += tetromino.index.x - prev_index_x;
-        move_y += tetromino.index.y - prev_index_y;
+        move_x += curr_tetromino.index.x - prev_index_x;
+        move_y += curr_tetromino.index.y - prev_index_y;
     }
 
     // Bounds
@@ -199,7 +201,7 @@ fn move_current_tetromino(
 
     // TODO: Probably better off setting the matrix up so you can index into it to look for occupied spots around the current tetromino
     // Check if any blocks in tetromino are overlapping with heap
-    if !can_move(position, heap) {
+    if !can_move(position, &heap) {
         let mut should_revert = true;
 
         if let Some(_) = should_rotate {
@@ -216,7 +218,7 @@ fn move_current_tetromino(
                 position.x += try_move.0;
                 position.y += try_move.1;
 
-                if can_move(position, heap) {
+                if can_move(position, &heap) {
                     should_revert = false;
                     break;
                 }
@@ -241,7 +243,7 @@ fn update_block_sprites(
     mut matrix_query: Query<&Sprite, With<Matrix>>,
     mut block_query: Query<(&MatrixPosition, &mut Transform)>
 ) {
-    let matrix = matrix_query.single().unwrap();
+    let matrix_sprite = matrix_query.single().unwrap();
     
     for (position, mut transform) in block_query.iter_mut() {
         let new_x: f32 = ((position.x as f32 * Block::SIZE) - (matrix_sprite.size.x * 0.5)) + (Block::SIZE * 0.5);
@@ -274,8 +276,8 @@ fn rotate_tetromino_block(tetromino_block: &mut Tetromino, matrix_size: i32, clo
 
 fn can_move(
     curr_tetromino_pos: &MatrixPosition,
-    heap: BTreeSet<&MatrixPosition>
-) {
+    heap: &BTreeSet<&MatrixPosition>
+) -> bool {
     curr_tetromino_pos.y >= 0 && !heap.contains(curr_tetromino_pos)
 } 
 
