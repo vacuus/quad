@@ -92,6 +92,7 @@ fn print_info(
         let curr_tetromino = curr_tetromino.single().unwrap();
         eprintln!("Current tetromino: {:?}\nPosition in matrix: {:?}",
             curr_tetromino.1, curr_tetromino.0);
+        timer.0.reset();
     }
 }
 
@@ -135,7 +136,8 @@ fn move_current_tetromino(
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
-        || keyboard_input.just_pressed(KeyCode::Up) {
+        || keyboard_input.just_pressed(KeyCode::Up)
+    {
         while can_move(*position, &heap) {
             position.y -= 1;
         }
@@ -150,43 +152,42 @@ fn move_current_tetromino(
         return;
     }
 
+    let mut move_x = if keyboard_input.just_pressed(KeyCode::J)
+        || keyboard_input.just_pressed(KeyCode::Left)
+    {
+        -1
+    } else if keyboard_input.just_pressed(KeyCode::L)
+        || keyboard_input.just_pressed(KeyCode::Right)
+    {
+        1
+    } else { 0 };
+
+    let mut move_y = if keyboard_input.just_pressed(KeyCode::K)
+        || keyboard_input.just_pressed(KeyCode::Down)
+    {
+        -1
+    } else { 0 };
+
     // Movement
     soft_drop_timer.0.tick(time.delta());
-
-    let mut move_x = 0;
-    let mut move_y = 0;
-
-    if keyboard_input.just_pressed(KeyCode::J)
-        || keyboard_input.just_pressed(KeyCode::Left) {
-        move_x -= 1;
-    }
-
-    if keyboard_input.just_pressed(KeyCode::L)
-        || keyboard_input.just_pressed(KeyCode::Right) {
-        move_x += 1;
-    }
-
-    if keyboard_input.just_pressed(KeyCode::K)
-        || keyboard_input.just_pressed(KeyCode::Down)
-        || soft_drop_timer.0.just_finished()
-    {
+    if soft_drop_timer.0.just_finished() {
         move_y -= 1;
+        soft_drop_timer.0.reset();
     }
 
-    let mut should_rotate: Option<bool> = None;
-    if keyboard_input.just_pressed(KeyCode::X) {
-        should_rotate = Some(true);
-    }
-
-    if keyboard_input.just_pressed(KeyCode::Z) {
-        should_rotate = Some(false);
-    }
+    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
+        Some(true)
+    } else if keyboard_input.just_pressed(KeyCode::Z) {
+        Some(false)
+    } else {
+        None
+    };
 
     let mut x_over = 0;
     let mut y_over = 0;
 
     // Rotation
-    if let Some(clockwise) = should_rotate {
+    if let Some(clockwise) = rotate_clockwise {
         let prev_index_x = curr_tetromino.index.x;
         let prev_index_y = curr_tetromino.index.y;
 
@@ -213,11 +214,10 @@ fn move_current_tetromino(
 
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
-    // Check if any blocks in tetromino are overlapping with heap
     if !can_move(*position, &heap) {
         let mut should_revert = true;
 
-        if let Some(_) = should_rotate {
+        if let Some(_) = rotate_clockwise {
             let try_moves = [
                 (1, 0),
                 (2, 0),
