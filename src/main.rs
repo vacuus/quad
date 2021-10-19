@@ -84,19 +84,14 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
 fn print_info(
     time: Res<Time>,
     mut timer: ResMut<PrintInfoTimer>,
-    mut current_query: Query<
-        (Entity, &MatrixPosition, &Tetromino),
-        With<CurrentTetromino>,
-    >,
+    curr_tetromino: Query<(&MatrixPosition, &Tetromino), With<CurrentTetromino>>
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
-        for (entity, position, tetromino) in current_query.iter_mut() {
-            println!("Current matrix_pos: {:?}", position);
-            println!("Current tetromino: {:?}", tetromino);
-            println!("{:?}", entity);
-        }
+        let curr_tetromino = curr_tetromino.single().unwrap();
+        eprintln!("Current tetromino: {:?}\nPosition in matrix: {:?}",
+            curr_tetromino.1, curr_tetromino.0);
     }
 }
 
