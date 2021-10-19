@@ -10,6 +10,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
+        .insert_resource(BTreeSet::<MatrixPosition>::new())
         .add_startup_system(setup.system())
         .add_system(print_info.system())
         .add_system(update_block_sprites.system())
@@ -32,7 +33,7 @@ struct Matrix {
 }
 
 // Holds a block's position within a tetromino for rotation
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct MatrixPosition {
     x: i32,
     y: i32,
@@ -102,21 +103,26 @@ fn print_info(
 fn move_current_tetromino(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
-    keyboard_input: Res<Input<KeyCode>>,
+    mut heap: ResMut<BTreeSet<MatrixPosition>>,
     matrix_query: Query<&Matrix>,
     mut current_query: Query<
         (Entity, &mut MatrixPosition, &mut Tetromino),
         With<CurrentTetromino>,
     >,
-    heap_query: Query<&MatrixPosition, (With<Heap>, Without<CurrentTetromino>)>,
+    // The current tetromino isn't part of the heap anyways, but Bevy doesn't
+    // know that; besides, it's fragile if the code is changed
+    heap_query: Query<&MatrixPosition,
+        (Added<Heap>, Without<CurrentTetromino>),
+    >,
 ) {
     fn can_move(
-        curr_tetromino_pos: &MatrixPosition,
-        heap: &BTreeSet<&MatrixPosition>,
+        curr_tetromino_pos: MatrixPosition,
+        heap: &BTreeSet<MatrixPosition>,
     ) -> bool {
-        curr_tetromino_pos.y >= 0 && !heap.contains(curr_tetromino_pos)
+        curr_tetromino_pos.y >= 0 && !heap.contains(&curr_tetromino_pos)
     }
 
     // There is only one entity with 'CurrentTetromino' as a component at a time
@@ -126,12 +132,16 @@ fn move_current_tetromino(
     let position = &mut *position;
     let prev_position = (position.x, position.y);
     let matrix = matrix_query.single().unwrap();
-    let heap = heap_query.iter().collect::<BTreeSet<_>>();
+
+    // 'heap' will only be updated when necessary
+    for pos in heap_query.iter() {
+        heap.insert(*pos);
+    }
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up) {
-        while can_move(position, &heap) {
+        while can_move(*position, &heap) {
             position.y -= 1;
         }
 
@@ -209,7 +219,7 @@ fn move_current_tetromino(
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
     // Check if any blocks in tetromino are overlapping with heap
-    if !can_move(position, &heap) {
+    if !can_move(*position, &heap) {
         let mut should_revert = true;
 
         if let Some(_) = should_rotate {
@@ -226,7 +236,7 @@ fn move_current_tetromino(
                 position.x += try_move.0;
                 position.y += try_move.1;
 
-                if can_move(position, &heap) {
+                if can_move(*position, &heap) {
                     should_revert = false;
                     break;
                 }
