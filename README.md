@@ -2,9 +2,13 @@
 
 Made with [Bevy](https://github.com/bevyengine/bevy), a Rust game engine!
 
-I could've used [Macroquad](https://macroquad.rs/) (and what a naming intrigue that would be!) but for my laziness, hence the fork
+I could've used [Macroquad](https://macroquad.rs/) (and what a naming intrigue that would be!) but for my laziness, hence the fork*
 
-Simply meant to demonstrate features I like (but feel free to mention preferences as issues)
+Simply meant to demonstrate features I like
+
+Feel free to mention preferences in issues or use this code (so long as you mind the license)
+
+\*originally forked from [8bit-pudding/bevy-tetris](https://github.com/8bit-pudding/bevy-tetris)
 ___
 
 TODO:
