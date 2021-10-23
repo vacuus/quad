@@ -290,8 +290,7 @@ fn spawn_current_tetromino(
     matrix: &Matrix,
     materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
-    let blocks = Tetromino::blocks_from_type(rand::random());
-    for (color, block) in blocks.into_iter() {
+    for (color, block) in Tetromino::blocks_from_type(rand::random()) {
         let tetromino_matrix_size =
             Tetromino::SIZES[block.tetromino_type as usize];
 
@@ -399,13 +398,13 @@ impl Tetromino {
     ];
 
     fn blocks_from_type(tetromino_type: TetrominoType)
-    -> Vec<(Color, Tetromino)> {
+    -> impl Iterator<Item = (Color, Tetromino)> {
         let type_usize = tetromino_type as usize;
         let color = Tetromino::COLORS[type_usize];
 
         Tetromino::BLOCK_INDICES[type_usize]
             .iter()
-            .map(|index| {
+            .map(move |index| {
                 (
                     Color::rgb(color.0, color.1, color.2),
                     Tetromino {
@@ -417,7 +416,6 @@ impl Tetromino {
                     },
                 )
             })
-            .collect()
     }
 }
 
