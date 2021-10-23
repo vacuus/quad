@@ -22,11 +22,6 @@ struct SoftDropTimer(Timer);
 
 struct PrintInfoTimer(Timer);
 
-// Base entity, everything is made out of blocks
-struct Block {
-    color: Color,
-}
-
 struct Matrix {
     width: i32,
     height: i32,
@@ -53,9 +48,7 @@ struct CurrentTetromino;
 // A block can be part of the heap.
 struct Heap;
 
-impl Block {
-    const SIZE: f32 = 25.0;
-}
+const BLOCK_SIZE: f32 = 25.0;
 
 fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     let matrix = Matrix {
@@ -72,8 +65,8 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
         .spawn_bundle(SpriteBundle {
             material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
             sprite: Sprite::new(Vec2::new(
-                matrix.width as f32 * Block::SIZE,
-                matrix.height as f32 * Block::SIZE,
+                matrix.width as f32 * BLOCK_SIZE,
+                matrix.height as f32 * BLOCK_SIZE,
             )),
             ..Default::default()
         })
@@ -260,9 +253,9 @@ fn update_block_sprites(
     let matrix = matrix_query.single().unwrap();
 
     for (position, mut transform) in block_query.iter_mut() {
-        let new_x = Block::SIZE * 
+        let new_x = BLOCK_SIZE * 
             (position.x as f32 - matrix.width as f32 * 0.5 + 0.5);
-        let new_y = Block::SIZE *
+        let new_y = BLOCK_SIZE *
             (position.y as f32 - matrix.height as f32 * 0.5 + 0.5);
 
         *transform = Transform::from_xyz(new_x, new_y, transform.translation.z);
@@ -298,20 +291,14 @@ fn spawn_current_tetromino(
     materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
     let blocks = Tetromino::blocks_from_type(rand::random());
-    for block in blocks.into_iter() {
+    for (color, block) in blocks.into_iter() {
         let tetromino_matrix_size =
-            Tetromino::SIZES[block.1.tetromino_type as usize];
+            Tetromino::SIZES[block.tetromino_type as usize];
 
         commands
             .spawn_bundle(SpriteBundle {
-                material: materials.add(
-                    Color::rgb(
-                        block.0.color.r(),
-                        block.0.color.g(),
-                        block.0.color.b(),
-                    ).into(),
-                ),
-                sprite: Sprite::new(Vec2::new(Block::SIZE, Block::SIZE)),
+                material: materials.add(color.into()),
+                sprite: Sprite::new(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                 transform: Transform::from_translation(
                     Vec3::new(0.0, 0.0, 1.0)
                 ),
@@ -319,10 +306,10 @@ fn spawn_current_tetromino(
             })
             .insert(CurrentTetromino)
             .insert(MatrixPosition {
-                x: block.1.index.x + 3,
-                y: matrix.height - tetromino_matrix_size + block.1.index.y,
+                x: block.index.x + 3,
+                y: matrix.height - tetromino_matrix_size + block.index.y,
             })
-            .insert_bundle(block)
+            .insert(block)
         ;
     }
 }
@@ -412,7 +399,7 @@ impl Tetromino {
     ];
 
     fn blocks_from_type(tetromino_type: TetrominoType)
-    -> Vec<(Block, Tetromino)> {
+    -> Vec<(Color, Tetromino)> {
         let type_usize = tetromino_type as usize;
         let color = Tetromino::COLORS[type_usize];
 
@@ -420,9 +407,7 @@ impl Tetromino {
             .iter()
             .map(|index| {
                 (
-                    Block {
-                        color: Color::rgb(color.0, color.1, color.2),
-                    },
+                    Color::rgb(color.0, color.1, color.2),
                     Tetromino {
                         index: MatrixPosition {
                             x: index.0,
