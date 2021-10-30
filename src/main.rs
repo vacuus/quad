@@ -34,16 +34,9 @@ struct MatrixPosition {
     y: i32,
 }
 
-// A block can be part of a tetromino. Stores the block's index within that
-// tetromino for the purpose of rotation.
+// A block can be part of the current tetromino
 #[derive(Debug)]
-struct Tetromino {
-    tetromino_type: TetrominoType,
-    index: MatrixPosition,
-}
-
-// A block can be part of the currently controlled tetromino.
-struct CurrentTetromino;
+struct Tetromino;
 
 // A block can be part of the heap.
 struct Heap;
@@ -77,14 +70,16 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
 fn print_info(
     time: Res<Time>,
     mut timer: ResMut<PrintInfoTimer>,
-    curr_tetromino: Query<(&MatrixPosition, &Tetromino), With<CurrentTetromino>>
+    curr_tetromino_query: Query<&MatrixPosition, With<Tetromino>>
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
-        let curr_tetromino = curr_tetromino.single().unwrap();
-        eprintln!("Current tetromino: {:?}\nPosition in matrix: {:?}",
-            curr_tetromino.1, curr_tetromino.0);
+        eprintln!("Positions of blocks in current tetromino:");
+        curr_tetromino_query
+            .iter()
+            .inspect(|pos| eprintln!("{:?}", pos))
+            .last();
         timer.0.reset();
     }
 }
@@ -97,14 +92,13 @@ fn move_current_tetromino(
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     mut heap: ResMut<BTreeSet<MatrixPosition>>,
     matrix_query: Query<&Matrix>,
-    mut current_query: Query<
-        (Entity, &mut MatrixPosition, &mut Tetromino),
-        With<CurrentTetromino>,
+    mut curr_tetromino_query: Query<
+        (Entity, &mut MatrixPosition), With<Tetromino>
     >,
     // The current tetromino isn't part of the heap anyways, but Bevy doesn't
     // know that; besides, it's fragile if the code is changed
     heap_query: Query<&MatrixPosition,
-        (Added<Heap>, Without<CurrentTetromino>),
+        (Added<Heap>, Without<Tetromino>),
     >,
 ) {
     fn can_move(
@@ -114,10 +108,11 @@ fn move_current_tetromino(
         curr_tetromino_pos.y >= 0 && !heap.contains(&curr_tetromino_pos)
     }
 
-    // There is only one entity with 'CurrentTetromino' as a component at a time
-    // ^^^ For now, this is a lie; the message of the commit right after
-    // commit 4aaaff201863f965f061471a52c16b215d2bbc65 explains this
-    let (entity, mut position, mut curr_tetromino) = current_query.single_mut().unwrap();
+    // Each of the four blocks making up the current tetromino have,
+    // appropriately, the 'Tetromino' component
+    let curr_tetromino_blocks = curr_tetromino_query
+        .iter_mut()
+        .collect::<Vec<_>>();
     let position = &mut *position;
     let prev_position = (position.x, position.y);
     let matrix = matrix_query.single().unwrap();
@@ -138,7 +133,7 @@ fn move_current_tetromino(
         position.y += 1;
         commands
             .entity(entity)
-            .remove::<CurrentTetromino>()
+            .remove::<Tetromino>()
             .insert(Heap);
 
         spawn_current_tetromino(&mut commands, matrix, &mut materials);
@@ -233,7 +228,7 @@ fn move_current_tetromino(
             // Revert movement and add to heap
             commands
                 .entity(entity)
-                .remove::<CurrentTetromino>()
+                .remove::<Tetromino>()
                 .insert(Heap);
 
             spawn_current_tetromino(&mut commands, matrix, &mut materials);
@@ -290,7 +285,7 @@ fn spawn_current_tetromino(
     matrix: &Matrix,
     materials: &mut ResMut<Assets<ColorMaterial>>,
 ) {
-    for (color, block) in Tetromino::blocks_from_type(rand::random()) {
+    for (color, position) in Tetromino::blocks_from_type(rand::random()) {
         let tetromino_matrix_size =
             Tetromino::SIZES[block.tetromino_type as usize];
 
@@ -303,12 +298,11 @@ fn spawn_current_tetromino(
                 ),
                 ..Default::default()
             })
-            .insert(CurrentTetromino)
             .insert(MatrixPosition {
-                x: block.index.x + 3,
-                y: matrix.height - tetromino_matrix_size + block.index.y,
+                x: position.x + 3,
+                y: matrix.height - tetromino_matrix_size + position.y,
             })
-            .insert(block)
+            .insert(Tetromino)
         ;
     }
 }
@@ -398,7 +392,7 @@ impl Tetromino {
     ];
 
     fn blocks_from_type(tetromino_type: TetrominoType)
-    -> impl Iterator<Item = (Color, Tetromino)> {
+    -> impl Iterator<Item = (Color, MatrixPosition)> {
         let type_usize = tetromino_type as usize;
         let color = Tetromino::COLORS[type_usize];
 
@@ -407,12 +401,9 @@ impl Tetromino {
             .map(move |index| {
                 (
                     Color::rgb(color.0, color.1, color.2),
-                    Tetromino {
-                        index: MatrixPosition {
-                            x: index.0,
-                            y: index.1,
-                        },
-                        tetromino_type,
+                    MatrixPosition {
+                        x: index.0,
+                        y: index.1,
                     },
                 )
             })
