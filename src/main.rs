@@ -70,16 +70,15 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
 fn print_info(
     time: Res<Time>,
     mut timer: ResMut<PrintInfoTimer>,
-    curr_tetromino_query: Query<&MatrixPosition, With<Tetromino>>
+    tetromino_query: Query<&MatrixPosition, With<Tetromino>>
 ) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
         eprintln!("Positions of blocks in current tetromino:");
-        curr_tetromino_query
+        tetromino_query
             .iter()
-            .inspect(|pos| eprintln!("{:?}", pos))
-            .last();
+            .for_each(|pos| eprintln!("{:?}", pos));
         timer.0.reset();
     }
 }
@@ -92,7 +91,7 @@ fn move_current_tetromino(
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     mut heap: ResMut<BTreeSet<MatrixPosition>>,
     matrix_query: Query<&Matrix>,
-    mut curr_tetromino_query: Query<
+    mut tetromino_query: Query<
         (Entity, &mut MatrixPosition), With<Tetromino>
     >,
     // The current tetromino isn't part of the heap anyways, but Bevy doesn't
@@ -102,19 +101,24 @@ fn move_current_tetromino(
     >,
 ) {
     fn can_move(
-        curr_tetromino_pos: MatrixPosition,
+        tetromino_pos: &Vec<Mut<MatrixPosition>>,
         heap: &BTreeSet<MatrixPosition>,
     ) -> bool {
-        curr_tetromino_pos.y >= 0 && !heap.contains(&curr_tetromino_pos)
+        tetromino_pos
+            .iter()
+            .all(|pos| pos.y >= 0 && !heap.contains(&pos))
     }
 
     // Each of the four blocks making up the current tetromino have,
     // appropriately, the 'Tetromino' component
-    let curr_tetromino_blocks = curr_tetromino_query
-        .iter_mut()
+    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = 
+        tetromino_query
+            .iter_mut()
+            .unzip();
+    let prev_positions = tetromino_pos
+        .iter()
+        .map(|pos| **pos)
         .collect::<Vec<_>>();
-    let position = &mut *position;
-    let prev_position = (position.x, position.y);
     let matrix = matrix_query.single().unwrap();
 
     // 'heap' will only be updated when necessary
@@ -126,16 +130,14 @@ fn move_current_tetromino(
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(*position, &heap) {
-            position.y -= 1;
+        while can_move(&tetromino_pos, &heap) {
+            tetromino_pos.iter().for_each(|pos| pos.y -= 1);
         }
 
-        position.y += 1;
-        commands
-            .entity(entity)
-            .remove::<Tetromino>()
-            .insert(Heap);
+        tetromino_pos.iter().for_each(|pos| pos.y += 1);
 
+        // Revert movement and add to heap
+        add_tetromino_to_heap(&tetromino_ents, &commands);
         spawn_current_tetromino(&mut commands, matrix, &mut materials);
         return;
     }
@@ -181,7 +183,7 @@ fn move_current_tetromino(
 
         let matrix_size =
             Tetromino::SIZES[curr_tetromino.tetromino_type as usize];
-        rotate_tetromino_block(&mut curr_tetromino, matrix_size, clockwise);
+        rotate_tetromino_block(&tetromino_pos, matrix_size, clockwise);
 
         move_x += curr_tetromino.index.x - prev_index_x;
         move_y += curr_tetromino.index.y - prev_index_y;
@@ -194,15 +196,17 @@ fn move_current_tetromino(
         x_over = ((position.x + move_x) - matrix.width + 1).max(x_over);
     }
 
-    position.x += move_x;
-    position.x -= x_over;
-
-    position.y += move_y;
-    position.y -= y_over;
+    tetromino_pos.iter().for_each(|pos| {
+        pos.x += move_x;
+        pos.x -= x_over;
+    
+        pos.y += move_y;
+        pos.y -= y_over;
+    });
 
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
-    if !can_move(*position, &heap) {
+    if !can_move(&tetromino_pos, &heap) {
         let mut should_revert = true;
 
         if let Some(_) = rotate_clockwise {
@@ -216,27 +220,27 @@ fn move_current_tetromino(
             ];
 
             for try_move in try_moves.iter() {
-                position.x += try_move.0;
-                position.y += try_move.1;
+                tetromino_pos.iter().for_each(|pos| {
+                    pos.x += try_move.0;
+                    pos.y += try_move.1;
+                });
 
-                if can_move(*position, &heap) {
+                if can_move(&tetromino_pos, &heap) {
                     should_revert = false;
                     break;
                 }
             }
         } else {
             // Revert movement and add to heap
-            commands
-                .entity(entity)
-                .remove::<Tetromino>()
-                .insert(Heap);
-
+            add_tetromino_to_heap(&tetromino_ents, &commands);
             spawn_current_tetromino(&mut commands, matrix, &mut materials);
         }
 
         if should_revert {
-            position.x = prev_position.0;
-            position.y = prev_position.1;
+            tetromino_pos
+                .iter()
+                .zip(&prev_positions)
+                .for_each(|(pos, prev_pos)| **pos = *prev_pos);
         }
     }
 }
@@ -261,22 +265,38 @@ fn update_block_sprites(
 // UTILITY AND IMPL
 // ----------------
 
+fn add_tetromino_to_heap(
+    curr_tetromino_blocks: &Vec<Entity>,
+    commands: &Commands
+) {
+    curr_tetromino_blocks
+        .iter()
+        .for_each(|&entity| {
+            commands
+                .entity(entity)
+                .remove::<Tetromino>()
+                .insert(Heap);
+        });
+}
+
 fn rotate_tetromino_block(
-    tetromino_block: &mut Tetromino,
+    tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix_size: i32,
     clockwise: bool,
 ) {
-    let orig_x = tetromino_block.index.x;
-    let orig_y = tetromino_block.index.y;
-    let matrix_size = matrix_size - 1;
-
-    let x = orig_x;
-    if clockwise {
-        tetromino_block.index.x = orig_y;
-        tetromino_block.index.y = matrix_size - x;
-    } else {
-        tetromino_block.index.x = matrix_size - orig_y;
-        tetromino_block.index.y = orig_x;
+    for pos in tetromino_pos {
+        let orig_x = pos.x;
+        let orig_y = pos.y;
+        let matrix_size = matrix_size - 1;
+    
+        let x = orig_x;
+        if clockwise {
+            pos.x = orig_y;
+            pos.y = matrix_size - x;
+        } else {
+            pos.x = matrix_size - orig_y;
+            pos.y = orig_x;
+        }
     }
 }
 
