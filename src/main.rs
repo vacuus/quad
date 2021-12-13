@@ -5,20 +5,9 @@ use rand::{
 };
 use ::std::collections::BTreeSet;
 
-fn main() {
-    App::build()
-        .add_plugins(DefaultPlugins)
-        .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
-        .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
-        .insert_resource(BTreeSet::<MatrixPosition>::new())
-        .insert_resource(rand::random::<TetrominoType>()) // just a placeholder
-        .add_startup_system(setup.system())
-        .add_system(print_info.system())
-        .add_system(update_block_sprites.system())
-        .add_system(move_current_tetromino.system())
-        .run()
-    ;
-}
+
+const BLOCK_SIZE: f32 = 25.0;
+
 
 struct SoftDropTimer(Timer);
 
@@ -36,14 +25,91 @@ struct MatrixPosition {
     y: i32,
 }
 
+// A block can be part of the heap.
+struct Heap;
+
 // A block can be part of the current tetromino
 #[derive(Debug)]
 struct Tetromino;
 
-// A block can be part of the heap.
-struct Heap;
+impl Tetromino {
+    fn blocks_from_type(tetromino_type: TetrominoType)
+    -> (i32, Color, [(i32, i32); 4]) {
+        use self::TetrominoType::*;
+    
+        let matrix_size = match tetromino_type {
+            I | O => 4,
+            T | Z | S | L | J => 3,
+        };
+    
+        let color = match tetromino_type {
+            I => (0.0, 0.7, 0.7),  // cyan
+            O => (0.7, 0.7, 0.0),  // yellow
+            T => (0.7, 0.0, 0.7),  // purple
+            Z => (0.7, 0.0, 0.0),  // red
+            S => (0.0, 0.7, 0.0),  // green
+            L => (0.0, 0.0, 0.7),  // blue
+            J => (0.9, 0.25, 0.0), // orange
+        };
 
-const BLOCK_SIZE: f32 = 25.0;
+        let color = Color::rgb(color.0, color.1, color.2);
+
+        let positions = match tetromino_type {
+            I => [(1, 3), (1, 2), (1, 1), (1, 0)],
+            O => [(1, 1), (1, 2), (2, 1), (2, 2)],
+            T => [(0, 1), (1, 1), (2, 1), (1, 2)],
+            Z => [(0, 2), (1, 2), (1, 1), (2, 1)],
+            S => [(2, 2), (1, 2), (1, 1), (0, 1)],
+            L => [(0, 2), (0, 1), (1, 1), (2, 1)],
+            J => [(0, 1), (1, 1), (2, 1), (2, 2)],
+        };
+
+        (matrix_size, color, positions)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+enum TetrominoType {
+    I,
+    O,
+    T,
+    S,
+    Z,
+    L,
+    J,
+}
+
+impl Distribution<TetrominoType> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
+        use self::TetrominoType::*;
+
+        match rng.gen_range(0..7) {
+            0 => I,
+            1 => O,
+            2 => T,
+            3 => S,
+            4 => Z,
+            5 => L,
+            6 => J,
+        }
+    }
+}
+
+
+fn main() {
+    App::build()
+        .add_plugins(DefaultPlugins)
+        .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
+        .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
+        .insert_resource(BTreeSet::<MatrixPosition>::new())
+        .insert_resource(rand::random::<TetrominoType>()) // just a placeholder
+        .add_startup_system(setup.system())
+        .add_system(print_info.system())
+        .add_system(update_block_sprites.system())
+        .add_system(move_current_tetromino.system())
+        .run()
+    ;
+}
 
 fn setup(
     mut commands: Commands,
@@ -370,63 +436,3 @@ fn spawn_current_tetromino(
     }
 }
 
-impl Tetromino {
-    fn blocks_from_type(tetromino_type: TetrominoType)
-    -> (i32, Color, [(i32, i32); 4]) {
-        use self::TetrominoType::*;
-    
-        let matrix_size = match tetromino_type {
-            I | O => 4,
-            T | Z | S | L | J => 3,
-        };
-    
-        let color = match tetromino_type {
-            I => (0.0, 0.7, 0.7),  // cyan
-            O => (0.7, 0.7, 0.0),  // yellow
-            T => (0.7, 0.0, 0.7),  // purple
-            Z => (0.7, 0.0, 0.0),  // red
-            S => (0.0, 0.7, 0.0),  // green
-            L => (0.0, 0.0, 0.7),  // blue
-            J => (0.9, 0.25, 0.0), // orange
-        };
-
-        let color = Color::rgb(color.0, color.1, color.2);
-
-        let positions = match tetromino_type {
-            I => [(1, 3), (1, 2), (1, 1), (1, 0)],
-            O => [(1, 1), (1, 2), (2, 1), (2, 2)],
-            T => [(0, 1), (1, 1), (2, 1), (1, 2)],
-            Z => [(0, 2), (1, 2), (1, 1), (2, 1)],
-            S => [(2, 2), (1, 2), (1, 1), (0, 1)],
-            L => [(0, 2), (0, 1), (1, 1), (2, 1)],
-            J => [(0, 1), (1, 1), (2, 1), (2, 2)],
-        };
-
-        (matrix_size, color, positions)
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
-enum TetrominoType {
-    I,
-    O,
-    T,
-    S,
-    Z,
-    L,
-    J,
-}
-
-impl Distribution<TetrominoType> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
-        match rng.gen_range(0..7) {
-            0 => TetrominoType::I,
-            1 => TetrominoType::O,
-            2 => TetrominoType::T,
-            3 => TetrominoType::S,
-            4 => TetrominoType::Z,
-            5 => TetrominoType::L,
-            _ => TetrominoType::J,
-        }
-    }
-}
