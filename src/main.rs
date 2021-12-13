@@ -11,11 +11,13 @@ fn main() {
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
         .insert_resource(BTreeSet::<MatrixPosition>::new())
+        .insert_resource(rand::random::<TetrominoType>()) // just a placeholder
         .add_startup_system(setup.system())
         .add_system(print_info.system())
         .add_system(update_block_sprites.system())
         .add_system(move_current_tetromino.system())
-        .run();
+        .run()
+    ;
 }
 
 struct SoftDropTimer(Timer);
@@ -43,7 +45,11 @@ struct Heap;
 
 const BLOCK_SIZE: f32 = 25.0;
 
-fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
+fn setup(
+    mut commands: Commands,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut tetromino_type: ResMut<TetrominoType>,
+) {
     let matrix = Matrix {
         width: 10,
         height: 22,
@@ -52,7 +58,12 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
 
-    spawn_current_tetromino(&mut commands, &matrix, &mut materials);
+    spawn_current_tetromino(
+        &mut commands,
+        &matrix,
+        &mut materials,
+        &mut tetromino_type,
+    );
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -76,9 +87,12 @@ fn print_info(
 
     if timer.0.just_finished() {
         eprintln!("Positions of blocks in current tetromino:");
+
         tetromino_query
             .iter()
-            .for_each(|pos| eprintln!("{:?}", pos));
+            .for_each(|pos| eprintln!("{:?}", pos))
+        ;
+
         timer.0.reset();
     }
 }
@@ -99,6 +113,7 @@ fn move_current_tetromino(
     heap_query: Query<&MatrixPosition,
         (Added<Heap>, Without<Tetromino>),
     >,
+    mut tetromino_type: ResMut<TetrominoType>,
 ) {
     fn can_move(
         tetromino_pos: &Vec<Mut<MatrixPosition>>,
@@ -111,14 +126,17 @@ fn move_current_tetromino(
 
     // Each of the four blocks making up the current tetromino have,
     // appropriately, the 'Tetromino' component
-    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = 
-        tetromino_query
-            .iter_mut()
-            .unzip();
+    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino_query
+        .iter_mut()
+        .unzip()
+    ;
+
     let prev_positions = tetromino_pos
         .iter()
         .map(|pos| **pos)
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+    ;
+
     let matrix = matrix_query.single().unwrap();
 
     // 'heap' will only be updated when necessary
@@ -138,7 +156,14 @@ fn move_current_tetromino(
 
         // Revert movement and add to heap
         add_tetromino_to_heap(&tetromino_ents, &commands);
-        spawn_current_tetromino(&mut commands, matrix, &mut materials);
+
+        spawn_current_tetromino(
+            &mut commands,
+            matrix,
+            &mut materials,
+            &mut tetromino_type,
+        );
+
         return;
     }
 
@@ -150,16 +175,21 @@ fn move_current_tetromino(
         || keyboard_input.just_pressed(KeyCode::Right)
     {
         1
-    } else { 0 };
+    } else {
+        0
+    };
 
     let mut move_y = if keyboard_input.just_pressed(KeyCode::K)
         || keyboard_input.just_pressed(KeyCode::Down)
     {
         -1
-    } else { 0 };
+    } else {
+        0
+    };
 
     // Movement
     soft_drop_timer.0.tick(time.delta());
+
     if soft_drop_timer.0.just_finished() {
         move_y -= 1;
         soft_drop_timer.0.reset();
@@ -181,8 +211,6 @@ fn move_current_tetromino(
         let prev_index_x = curr_tetromino.index.x;
         let prev_index_y = curr_tetromino.index.y;
 
-        let matrix_size =
-            Tetromino::SIZES[curr_tetromino.tetromino_type as usize];
         rotate_tetromino_block(&tetromino_pos, matrix_size, clockwise);
 
         move_x += curr_tetromino.index.x - prev_index_x;
@@ -233,14 +261,21 @@ fn move_current_tetromino(
         } else {
             // Revert movement and add to heap
             add_tetromino_to_heap(&tetromino_ents, &commands);
-            spawn_current_tetromino(&mut commands, matrix, &mut materials);
+
+            spawn_current_tetromino(
+                &mut commands,
+                matrix,
+                &mut materials,
+                &mut tetromino_type,
+            );
         }
 
         if should_revert {
             tetromino_pos
                 .iter()
                 .zip(&prev_positions)
-                .for_each(|(pos, prev_pos)| **pos = *prev_pos);
+                .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+            ;
         }
     }
 }
@@ -253,9 +288,11 @@ fn update_block_sprites(
 
     for (position, mut transform) in block_query.iter_mut() {
         let new_x = BLOCK_SIZE * 
-            (position.x as f32 - matrix.width as f32 * 0.5 + 0.5);
+            (position.x as f32 - matrix.width as f32 * 0.5 + 0.5)
+        ;
         let new_y = BLOCK_SIZE *
-            (position.y as f32 - matrix.height as f32 * 0.5 + 0.5);
+            (position.y as f32 - matrix.height as f32 * 0.5 + 0.5)
+        ;
 
         *transform = Transform::from_xyz(new_x, new_y, transform.translation.z);
     }
@@ -275,8 +312,10 @@ fn add_tetromino_to_heap(
             commands
                 .entity(entity)
                 .remove::<Tetromino>()
-                .insert(Heap);
-        });
+                .insert(Heap)
+            ;
+        })
+    ;
 }
 
 fn rotate_tetromino_block(
@@ -304,130 +343,78 @@ fn spawn_current_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
     materials: &mut ResMut<Assets<ColorMaterial>>,
+    tetromino_type: &mut ResMut<TetrominoType>,
 ) {
-    for (color, position) in Tetromino::blocks_from_type(rand::random()) {
-        let tetromino_matrix_size =
-            Tetromino::SIZES[block.tetromino_type as usize];
+    **tetromino_type = rand::random::<TetrominoType>();
 
+    let (tetromino_matrix_size, color, positions) = Tetromino::blocks_from_type(
+        **tetromino_type
+    );
+
+    for (x, y) in positions {
         commands
             .spawn_bundle(SpriteBundle {
                 material: materials.add(color.into()),
-                sprite: Sprite::new(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                sprite: Sprite::new(Vec2::splat(BLOCK_SIZE)),
                 transform: Transform::from_translation(
                     Vec3::new(0.0, 0.0, 1.0)
                 ),
                 ..Default::default()
             })
             .insert(MatrixPosition {
-                x: position.x + 3,
-                y: matrix.height - tetromino_matrix_size + position.y,
+                x: x + 3,
+                y: matrix.height - tetromino_matrix_size + y,
             })
             .insert(Tetromino)
         ;
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-enum TetrominoType {
-    I = 0,
-    O = 1,
-    T = 2,
-    S = 3,
-    Z = 4,
-    L = 5,
-    J = 6,
+impl Tetromino {
+    fn blocks_from_type(tetromino_type: TetrominoType)
+    -> (i32, Color, [(i32, i32); 4]) {
+        use self::TetrominoType::*;
+    
+        let matrix_size = match tetromino_type {
+            I | O => 4,
+            T | Z | S | L | J => 3,
+        };
+    
+        let color = match tetromino_type {
+            I => (0.0, 0.7, 0.7),  // cyan
+            O => (0.7, 0.7, 0.0),  // yellow
+            T => (0.7, 0.0, 0.7),  // purple
+            Z => (0.7, 0.0, 0.0),  // red
+            S => (0.0, 0.7, 0.0),  // green
+            L => (0.0, 0.0, 0.7),  // blue
+            J => (0.9, 0.25, 0.0), // orange
+        };
+
+        let color = Color::rgb(color.0, color.1, color.2);
+
+        let positions = match tetromino_type {
+            I => [(1, 3), (1, 2), (1, 1), (1, 0)],
+            O => [(1, 1), (1, 2), (2, 1), (2, 2)],
+            T => [(0, 1), (1, 1), (2, 1), (1, 2)],
+            Z => [(0, 2), (1, 2), (1, 1), (2, 1)],
+            S => [(2, 2), (1, 2), (1, 1), (0, 1)],
+            L => [(0, 2), (0, 1), (1, 1), (2, 1)],
+            J => [(0, 1), (1, 1), (2, 1), (2, 2)],
+        };
+
+        (matrix_size, color, positions)
+    }
 }
 
-impl Tetromino {
-    const BLOCK_INDICES: [[(i32, i32); 4]; 7] = [
-        [
-            // line, cyan
-            (1, 3),
-            (1, 2),
-            (1, 1),
-            (1, 0),
-        ],
-        [
-            // square, yellow
-            (1, 1),
-            (1, 2),
-            (2, 1),
-            (2, 2),
-        ],
-        [
-            // T, purple
-            (0, 1),
-            (1, 1),
-            (2, 1),
-            (1, 2),
-        ],
-        [
-            // Z, red
-            (0, 2),
-            (1, 2),
-            (1, 1),
-            (2, 1),
-        ],
-        [
-            // S, green
-            (2, 2),
-            (1, 2),
-            (1, 1),
-            (0, 1),
-        ],
-        [
-            // L, blue
-            (0, 2),
-            (0, 1),
-            (1, 1),
-            (2, 1),
-        ],
-        [
-            // J, orange
-            (0, 1),
-            (1, 1),
-            (2, 1),
-            (2, 2),
-        ],
-    ];
-
-    const COLORS: [(f32, f32, f32); 7] = [
-        (0.0, 0.7, 0.7),  // line, cyan
-        (0.7, 0.7, 0.0),  // square, yellow
-        (0.7, 0.0, 0.7),  // T, purple
-        (0.7, 0.0, 0.0),  // Z, red
-        (0.0, 0.7, 0.0),  // S, green
-        (0.0, 0.0, 0.7),  // L, blue
-        (0.9, 0.25, 0.0), // J, orange
-    ];
-
-    const SIZES: [i32; 7] = [
-        4, // line, cyan
-        4, // square, yellow
-        3, // T, purple
-        3, // Z, red
-        3, // S, green
-        3, // L, blue
-        3, // J, orange
-    ];
-
-    fn blocks_from_type(tetromino_type: TetrominoType)
-    -> impl Iterator<Item = (Color, MatrixPosition)> {
-        let type_usize = tetromino_type as usize;
-        let color = Tetromino::COLORS[type_usize];
-
-        Tetromino::BLOCK_INDICES[type_usize]
-            .iter()
-            .map(move |index| {
-                (
-                    Color::rgb(color.0, color.1, color.2),
-                    MatrixPosition {
-                        x: index.0,
-                        y: index.1,
-                    },
-                )
-            })
-    }
+#[derive(Copy, Clone, Debug)]
+enum TetrominoType {
+    I,
+    O,
+    T,
+    S,
+    Z,
+    L,
+    J,
 }
 
 impl Distribution<TetrominoType> for Standard {
