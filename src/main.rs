@@ -259,7 +259,10 @@ fn move_current_tetromino(
         soft_drop_timer.0.reset();
     }
 
-    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
+    tetromino_pos.iter_mut().for_each(|pos| pos.x += move_x);
+    tetromino_pos.iter_mut().for_each(|pos| pos.y += move_y);
+
+    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
         Some(true)
     } else if keyboard_input.just_pressed(KeyCode::Z) {
         Some(false)
@@ -267,41 +270,29 @@ fn move_current_tetromino(
         None
     };
 
-    let mut x_over = 0;
-    let mut y_over = 0;
-
     // Rotation
-    if let Some(clockwise) = rotate_clockwise {
-        let prev_index_x = curr_tetromino.index.x;
-        let prev_index_y = curr_tetromino.index.y;
+    if let Some(clockwise) = rotate {
+        use self::TetrominoType::*;
 
-        rotate_tetromino_block(&mut tetromino_pos, matrix_size, clockwise);
+        let rotation_grid_size = match *tetromino_type {
+            I | O => 4,
+            T | Z | S | L | J => 3,
+        };
 
-        move_x += curr_tetromino.index.x - prev_index_x;
-        move_y += curr_tetromino.index.y - prev_index_y;
+        rotate_tetromino_block(
+            &mut tetromino_pos,
+            rotation_grid_size,
+            &matrix,
+            clockwise,
+        );
     }
-
-    // Bounds
-    if position.x + move_x < 0 {
-        x_over = (position.x + move_x).min(x_over);
-    } else if position.x + move_x >= matrix.width {
-        x_over = ((position.x + move_x) - matrix.width + 1).max(x_over);
-    }
-
-    tetromino_pos.iter().for_each(|pos| {
-        pos.x += move_x;
-        pos.x -= x_over;
-    
-        pos.y += move_y;
-        pos.y -= y_over;
-    });
 
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
     if !can_move(&tetromino_pos, &matrix, &heap) {
-        let mut should_revert = true;
+        if rotate.is_some() {
+            let mut should_revert = true;
 
-        if let Some(_) = rotate_clockwise {
             let try_moves = [
                 (1, 0),
                 (2, 0),
@@ -322,6 +313,14 @@ fn move_current_tetromino(
                     break;
                 }
             }
+
+            if should_revert {
+                tetromino_pos
+                    .iter_mut()
+                    .zip(&prev_positions)
+                    .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+                ;
+            }
         } else {
             // Revert movement and add to heap
             add_tetromino_to_heap(
@@ -340,13 +339,6 @@ fn move_current_tetromino(
             );
         }
 
-        if should_revert {
-            tetromino_pos
-                .iter()
-                .zip(&prev_positions)
-                .for_each(|(pos, prev_pos)| **pos = *prev_pos)
-            ;
-        }
     }
 }
 
@@ -399,22 +391,34 @@ fn add_tetromino_to_heap(
 
 fn rotate_tetromino_block(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
-    matrix_size: i32,
+    rotation_grid_size: i32,
+    matrix: &Matrix,
     clockwise: bool,
 ) {
+    let mut offset = 0;
+
     for pos in tetromino_pos {
-        let orig_x = pos.x;
-        let orig_y = pos.y;
-        let matrix_size = matrix_size - 1;
+        let x = pos.x;
+        let y = pos.y;
+        let rotation_grid_size = rotation_grid_size - 1;
     
-        let x = orig_x;
         if clockwise {
-            pos.x = orig_y;
-            pos.y = matrix_size - x;
+            pos.x = y;
+            pos.y = rotation_grid_size - x;
         } else {
-            pos.x = matrix_size - orig_y;
-            pos.y = orig_x;
+            pos.x = rotation_grid_size - y;
+            pos.y = x;
         }
+
+        if pos.x < 0 {
+            offset = offset.max(-pos.x);
+        } else if pos.x >= matrix.width {
+            offset = offset.min(matrix.width - pos.x - 1);
+        }
+    }
+
+    for pos in tetromino_pos {
+        pos.x += offset;
     }
 }
 
