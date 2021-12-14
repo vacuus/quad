@@ -118,6 +118,8 @@ fn setup(
         height: 22,
     };
 
+    *heap = Vec::with_capacity((matrix.width * matrix.height) as usize);
+
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
 
