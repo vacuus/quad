@@ -189,7 +189,7 @@ fn move_current_tetromino(
 
     // Each of the four blocks making up the current tetromino has,
     // appropriately, the 'Tetromino' component
-    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino_query
+    let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino_query
         .iter_mut()
         .unzip()
     ;
@@ -207,14 +207,14 @@ fn move_current_tetromino(
         || keyboard_input.just_pressed(KeyCode::Up)
     {
         while can_move(&tetromino_pos, &matrix, &*heap) {
-            tetromino_pos.iter().for_each(|pos| pos.y -= 1);
+            tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
 
-        tetromino_pos.iter().for_each(|pos| pos.y += 1);
+        tetromino_pos.iter_mut().for_each(|pos| pos.y += 1);
 
         // Revert movement and add to heap
         add_tetromino_to_heap(
-            &commands,
+            &mut commands,
             &tetromino_ents,
             &mut heap,
             &tetromino_pos,
@@ -223,7 +223,7 @@ fn move_current_tetromino(
 
         spawn_current_tetromino(
             &mut commands,
-            matrix,
+            &matrix,
             &mut materials,
             &mut tetromino_type,
         );
@@ -231,7 +231,7 @@ fn move_current_tetromino(
         return;
     }
 
-    let mut move_x = if keyboard_input.just_pressed(KeyCode::J)
+    let move_x = if keyboard_input.just_pressed(KeyCode::J)
         || keyboard_input.just_pressed(KeyCode::Left)
     {
         -1
@@ -275,7 +275,7 @@ fn move_current_tetromino(
         let prev_index_x = curr_tetromino.index.x;
         let prev_index_y = curr_tetromino.index.y;
 
-        rotate_tetromino_block(&tetromino_pos, matrix_size, clockwise);
+        rotate_tetromino_block(&mut tetromino_pos, matrix_size, clockwise);
 
         move_x += curr_tetromino.index.x - prev_index_x;
         move_y += curr_tetromino.index.y - prev_index_y;
@@ -311,8 +311,8 @@ fn move_current_tetromino(
                 (1, -2),
             ];
 
-            for try_move in try_moves.iter() {
-                tetromino_pos.iter().for_each(|pos| {
+            for try_move in &try_moves {
+                tetromino_pos.iter_mut().for_each(|pos| {
                     pos.x += try_move.0;
                     pos.y += try_move.1;
                 });
@@ -325,7 +325,7 @@ fn move_current_tetromino(
         } else {
             // Revert movement and add to heap
             add_tetromino_to_heap(
-                &commands,
+                &mut commands,
                 &tetromino_ents,
                 &mut heap,
                 &tetromino_pos,
@@ -334,7 +334,7 @@ fn move_current_tetromino(
 
             spawn_current_tetromino(
                 &mut commands,
-                matrix,
+                &matrix,
                 &mut materials,
                 &mut tetromino_type,
             );
@@ -373,7 +373,7 @@ fn update_block_sprites(
 // ----------------
 
 fn add_tetromino_to_heap(
-    commands: &Commands,
+    commands: &mut Commands,
     tetromino_ents: &Vec<Entity>,
     heap: &mut ResMut<Vec<Option<()>>>,
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
@@ -398,7 +398,7 @@ fn add_tetromino_to_heap(
 }
 
 fn rotate_tetromino_block(
-    tetromino_pos: &Vec<Mut<MatrixPosition>>,
+    tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     matrix_size: i32,
     clockwise: bool,
 ) {
