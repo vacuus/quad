@@ -3,7 +3,6 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-use ::std::collections::BTreeSet;
 
 
 const BLOCK_SIZE: f32 = 25.0;
@@ -24,9 +23,6 @@ struct MatrixPosition {
     x: i32,
     y: i32,
 }
-
-// A block can be part of the heap.
-struct Heap;
 
 // A block can be part of the current tetromino
 #[derive(Debug)]
@@ -101,8 +97,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
-        .insert_resource(BTreeSet::<MatrixPosition>::new())
-        .insert_resource(rand::random::<TetrominoType>()) // just a placeholder
+        .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
+        .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
         .add_system(print_info.system())
         .add_system(update_block_sprites.system())
@@ -115,6 +111,7 @@ fn setup(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut tetromino_type: ResMut<TetrominoType>,
+    mut heap: ResMut<Vec<Option<()>>>,
 ) {
     let matrix = Matrix {
         width: 10,
@@ -169,28 +166,26 @@ fn move_current_tetromino(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
-    mut heap: ResMut<BTreeSet<MatrixPosition>>,
+    mut heap: ResMut<Vec<Option<()>>>,
     matrix_query: Query<&Matrix>,
     mut tetromino_query: Query<
         (Entity, &mut MatrixPosition), With<Tetromino>
-    >,
-    // The current tetromino isn't part of the heap anyways, but Bevy doesn't
-    // know that; besides, it's fragile if the code is changed
-    heap_query: Query<&MatrixPosition,
-        (Added<Heap>, Without<Tetromino>),
     >,
     mut tetromino_type: ResMut<TetrominoType>,
 ) {
     fn can_move(
         tetromino_pos: &Vec<Mut<MatrixPosition>>,
-        heap: &BTreeSet<MatrixPosition>,
+        matrix: &Matrix,
+        heap: &Vec<Option<()>>,
     ) -> bool {
         tetromino_pos
             .iter()
-            .all(|pos| pos.y >= 0 && !heap.contains(&pos))
+            .all(|pos| pos.y >= 0
+                && heap.get((pos.x + pos.y * matrix.width) as usize).is_none()
+            )
     }
 
-    // Each of the four blocks making up the current tetromino have,
+    // Each of the four blocks making up the current tetromino has,
     // appropriately, the 'Tetromino' component
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino_query
         .iter_mut()
@@ -205,23 +200,24 @@ fn move_current_tetromino(
 
     let matrix = matrix_query.single().unwrap();
 
-    // 'heap' will only be updated when necessary
-    for pos in heap_query.iter() {
-        heap.insert(*pos);
-    }
-
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(&tetromino_pos, &heap) {
+        while can_move(&tetromino_pos, &matrix, &*heap) {
             tetromino_pos.iter().for_each(|pos| pos.y -= 1);
         }
 
         tetromino_pos.iter().for_each(|pos| pos.y += 1);
 
         // Revert movement and add to heap
-        add_tetromino_to_heap(&tetromino_ents, &commands);
+        add_tetromino_to_heap(
+            &commands,
+            &tetromino_ents,
+            &mut heap,
+            &tetromino_pos,
+            &matrix,
+        );
 
         spawn_current_tetromino(
             &mut commands,
@@ -300,7 +296,7 @@ fn move_current_tetromino(
 
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
-    if !can_move(&tetromino_pos, &heap) {
+    if !can_move(&tetromino_pos, &matrix, &heap) {
         let mut should_revert = true;
 
         if let Some(_) = rotate_clockwise {
@@ -319,14 +315,20 @@ fn move_current_tetromino(
                     pos.y += try_move.1;
                 });
 
-                if can_move(&tetromino_pos, &heap) {
+                if can_move(&tetromino_pos, &matrix, &heap) {
                     should_revert = false;
                     break;
                 }
             }
         } else {
             // Revert movement and add to heap
-            add_tetromino_to_heap(&tetromino_ents, &commands);
+            add_tetromino_to_heap(
+                &commands,
+                &tetromino_ents,
+                &mut heap,
+                &tetromino_pos,
+                &matrix,
+            );
 
             spawn_current_tetromino(
                 &mut commands,
@@ -369,17 +371,26 @@ fn update_block_sprites(
 // ----------------
 
 fn add_tetromino_to_heap(
-    curr_tetromino_blocks: &Vec<Entity>,
-    commands: &Commands
+    commands: &Commands,
+    tetromino_ents: &Vec<Entity>,
+    heap: &mut ResMut<Vec<Option<()>>>,
+    tetromino_pos: &Vec<Mut<MatrixPosition>>,
+    matrix: &Matrix,
 ) {
-    curr_tetromino_blocks
+    tetromino_ents
         .iter()
         .for_each(|&entity| {
             commands
                 .entity(entity)
                 .remove::<Tetromino>()
-                .insert(Heap)
             ;
+        })
+    ;
+
+    tetromino_pos
+        .iter()
+        .for_each(|pos| {
+            heap[(pos.x + pos.y * matrix.width) as usize] = Some(());
         })
     ;
 }
@@ -435,4 +446,3 @@ fn spawn_current_tetromino(
         ;
     }
 }
-
