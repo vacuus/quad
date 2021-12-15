@@ -204,8 +204,8 @@ fn move_current_tetromino(
     let matrix = matrix_query.single().unwrap();
 
     // Hard drop
-    if keyboard_input.just_pressed(KeyCode::I)
-        || keyboard_input.just_pressed(KeyCode::Up)
+    if keyboard_input.pressed(KeyCode::I)
+        || keyboard_input.pressed(KeyCode::Up)
     {
         while can_move(&tetromino_pos, &matrix, &*heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
@@ -232,20 +232,20 @@ fn move_current_tetromino(
         return;
     }
 
-    let move_x = if keyboard_input.just_pressed(KeyCode::J)
-        || keyboard_input.just_pressed(KeyCode::Left)
+    let move_x = if keyboard_input.pressed(KeyCode::J)
+        || keyboard_input.pressed(KeyCode::Left)
     {
         -1
-    } else if keyboard_input.just_pressed(KeyCode::L)
-        || keyboard_input.just_pressed(KeyCode::Right)
+    } else if keyboard_input.pressed(KeyCode::L)
+        || keyboard_input.pressed(KeyCode::Right)
     {
         1
     } else {
         0
     };
 
-    let mut move_y = if keyboard_input.just_pressed(KeyCode::K)
-        || keyboard_input.just_pressed(KeyCode::Down)
+    let mut move_y = if keyboard_input.pressed(KeyCode::K)
+        || keyboard_input.pressed(KeyCode::Down)
     {
         -1
     } else {
@@ -263,16 +263,16 @@ fn move_current_tetromino(
     tetromino_pos.iter_mut().for_each(|pos| pos.x += move_x);
     tetromino_pos.iter_mut().for_each(|pos| pos.y += move_y);
 
-    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
+    let rotate_clockwise = if keyboard_input.pressed(KeyCode::X) {
         Some(true)
-    } else if keyboard_input.just_pressed(KeyCode::Z) {
+    } else if keyboard_input.pressed(KeyCode::Z) {
         Some(false)
     } else {
         None
     };
 
     // Rotation
-    if let Some(clockwise) = rotate {
+    if let Some(clockwise) = rotate_clockwise {
         use self::TetrominoType::*;
 
         let rotation_grid_size = match *tetromino_type {
@@ -291,7 +291,7 @@ fn move_current_tetromino(
     // TODO: Probably better off setting the matrix up so you can index into
     // it to look for occupied spots around the current tetromino
     if !can_move(&tetromino_pos, &matrix, &heap) {
-        if rotate.is_some() {
+        if rotate_clockwise.is_some() {
             let mut should_revert = true;
 
             let try_moves = [
@@ -350,7 +350,7 @@ fn update_block_sprites(
     let matrix = matrix_query.single().unwrap();
 
     for (position, mut transform) in block_query.iter_mut() {
-        let new_x = BLOCK_SIZE * 
+        let new_x = BLOCK_SIZE *
             (position.x as f32 - matrix.width as f32 * 0.5 + 0.5)
         ;
         let new_y = BLOCK_SIZE *
