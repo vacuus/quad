@@ -260,8 +260,22 @@ fn move_current_tetromino(
         soft_drop_timer.0.reset();
     }
 
-    tetromino_pos.iter_mut().for_each(|pos| pos.x += move_x);
-    tetromino_pos.iter_mut().for_each(|pos| pos.y += move_y);
+    if (move_x == -1 && !tetromino_pos.iter().any(|pos| pos.x == 0))
+        || (move_x == 1
+            && !tetromino_pos.iter().any(|pos| pos.x == matrix.width - 1)
+        )
+    {
+        tetromino_pos.iter_mut().for_each(|pos| pos.x += move_x);
+    }
+
+    let mut offset = 0;
+
+    tetromino_pos.iter_mut().for_each(|pos| {
+        pos.y += move_y;
+        offset = offset.max(-pos.y);
+    });
+
+    tetromino_pos.iter_mut().for_each(|pos| pos.y += offset);
 
     let rotate_clockwise = if keyboard_input.pressed(KeyCode::X) {
         Some(true)
