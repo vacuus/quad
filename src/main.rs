@@ -119,7 +119,7 @@ fn setup(
         height: 22,
     };
 
-    *heap = Vec::with_capacity((matrix.width * matrix.height) as usize);
+    *heap = vec![None; (matrix.width * matrix.height) as usize];
 
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
@@ -147,7 +147,7 @@ fn setup(
 fn print_info(
     time: Res<Time>,
     mut timer: ResMut<PrintInfoTimer>,
-    tetromino_query: Query<&MatrixPosition, With<Tetromino>>
+    tetromino_query: Query<&MatrixPosition, With<Tetromino>>,
 ) {
     timer.0.tick(time.delta());
 
