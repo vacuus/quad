@@ -10,8 +10,6 @@ const BLOCK_SIZE: f32 = 25.0;
 
 struct SoftDropTimer(Timer);
 
-struct PrintInfoTimer(Timer);
-
 struct MoveTetrominoTimer(Timer);
 
 struct Matrix {
@@ -99,7 +97,6 @@ fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
-        .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
         .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.03125, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
@@ -144,25 +141,6 @@ fn setup(
         })
         .insert(matrix)
     ;
-}
-
-fn print_info(
-    time: Res<Time>,
-    mut timer: ResMut<PrintInfoTimer>,
-    tetromino_query: Query<&MatrixPosition, With<Tetromino>>,
-) {
-    timer.0.tick(time.delta());
-
-    if timer.0.just_finished() {
-        eprintln!("Positions of blocks in current tetromino:");
-
-        tetromino_query
-            .iter()
-            .for_each(|pos| eprintln!("{:?}", pos))
-        ;
-
-        timer.0.reset();
-    }
 }
 
 fn move_current_tetromino(
