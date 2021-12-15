@@ -12,6 +12,8 @@ struct SoftDropTimer(Timer);
 
 struct PrintInfoTimer(Timer);
 
+struct MoveTetrominoTimer(Timer);
+
 struct Matrix {
     width: i32,
     height: i32,
@@ -98,10 +100,10 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
         .insert_resource(PrintInfoTimer(Timer::from_seconds(1.0, true)))
+        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.03125, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
-        .add_system(print_info.system())
         .add_system(update_block_sprites.system())
         .add_system(move_current_tetromino.system())
         .run()
@@ -169,6 +171,7 @@ fn move_current_tetromino(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
+    mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
     matrix_query: Query<&Matrix>,
     mut tetromino_query: Query<
@@ -235,7 +238,7 @@ fn move_current_tetromino(
         return;
     }
 
-    let move_x = if keyboard_input.pressed(KeyCode::J)
+    let mut move_x = if keyboard_input.pressed(KeyCode::J)
         || keyboard_input.pressed(KeyCode::Left)
     {
         -1
@@ -254,6 +257,16 @@ fn move_current_tetromino(
     } else {
         0
     };
+
+    move_tetromino_timer.0.tick(time.delta());
+
+    if move_tetromino_timer.0.just_finished() {
+        move_tetromino_timer.0.reset();
+    } else {
+        // Ignore movement input, but soft drop still takes effect
+        move_x = 0;
+        move_y = 0;
+    }
 
     // Movement
     soft_drop_timer.0.tick(time.delta());
