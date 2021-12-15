@@ -397,7 +397,7 @@ fn rotate_tetromino_block(
 ) {
     let mut offset = 0;
 
-    for pos in tetromino_pos {
+    for pos in &mut *tetromino_pos {
         let x = pos.x;
         let y = pos.y;
         let rotation_grid_size = rotation_grid_size - 1;
@@ -417,7 +417,7 @@ fn rotate_tetromino_block(
         }
     }
 
-    for pos in tetromino_pos {
+    for pos in &mut *tetromino_pos {
         pos.x += offset;
     }
 }
