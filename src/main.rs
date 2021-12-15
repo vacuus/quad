@@ -183,8 +183,13 @@ fn move_current_tetromino(
     ) -> bool {
         tetromino_pos
             .iter()
-            .all(|pos| pos.y >= 0
-                && heap.get((pos.x + pos.y * matrix.width) as usize).is_none()
+            .all(|pos| pos.y > 0
+                && match heap.get(
+                    (pos.x + (pos.y - 1) * matrix.width) as usize)
+                {
+                    Some(None) => true,
+                    _ => false,
+                }
             )
     }
 
@@ -210,8 +215,6 @@ fn move_current_tetromino(
         while can_move(&tetromino_pos, &matrix, &*heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
-
-        tetromino_pos.iter_mut().for_each(|pos| pos.y += 1);
 
         // Revert movement and add to heap
         add_tetromino_to_heap(
