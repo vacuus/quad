@@ -339,24 +339,23 @@ fn move_current_tetromino(
                     .for_each(|(pos, prev_pos)| **pos = *prev_pos)
                 ;
             }
-        } else {
-            // Revert movement and add to heap
-            add_tetromino_to_heap(
-                &mut commands,
-                &tetromino_ents,
-                &mut heap,
-                &tetromino_pos,
-                &matrix,
-            );
-
-            spawn_current_tetromino(
-                &mut commands,
-                &matrix,
-                &mut materials,
-                &mut tetromino_type,
-            );
         }
 
+        // Revert movement and add to heap
+        add_tetromino_to_heap(
+            &mut commands,
+            &tetromino_ents,
+            &mut heap,
+            &tetromino_pos,
+            &matrix,
+        );
+
+        spawn_current_tetromino(
+            &mut commands,
+            &matrix,
+            &mut materials,
+            &mut tetromino_type,
+        );
     }
 }
 
