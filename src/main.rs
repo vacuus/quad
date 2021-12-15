@@ -18,7 +18,7 @@ struct Matrix {
 }
 
 // Holds a block's position within a tetromino for rotation
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy)]
 struct MatrixPosition {
     x: i32,
     y: i32,
