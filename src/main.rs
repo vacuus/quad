@@ -7,6 +7,8 @@ use rand::{
 
 const BLOCK_SIZE: f32 = 25.0;
 
+#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
+struct MoveTetrominoSystem;
 
 struct SoftDropTimer(Timer);
 
@@ -101,8 +103,8 @@ fn main() {
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
-        .add_system(update_block_sprites.system())
-        .add_system(move_current_tetromino.system())
+        .add_system(move_current_tetromino.system().label(MoveTetrominoSystem))
+        .add_system(update_block_sprites.system().after(MoveTetrominoSystem))
         .run()
     ;
 }
