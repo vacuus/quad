@@ -209,8 +209,8 @@ fn move_current_tetromino(
     let matrix = matrix_query.single().unwrap();
 
     // Hard drop
-    if keyboard_input.pressed(KeyCode::I)
-        || keyboard_input.pressed(KeyCode::Up)
+    if keyboard_input.just_pressed(KeyCode::I)
+        || keyboard_input.just_pressed(KeyCode::Up)
     {
         while can_move(&tetromino_pos, &matrix, &*heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
