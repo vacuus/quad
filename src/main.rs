@@ -87,6 +87,7 @@ impl Distribution<TetrominoType> for Standard {
             4 => Z,
             5 => L,
             6 => J,
+            _ => unreachable!(),
         }
     }
 }
