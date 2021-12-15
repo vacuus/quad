@@ -103,7 +103,7 @@ fn main() {
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
-        .add_system(move_current_tetromino.system().label(MoveTetrominoSystem))
+        .add_system(move_tetromino.system().label(MoveTetrominoSystem))
         .add_system(update_block_sprites.system().after(MoveTetrominoSystem))
         .run()
     ;
@@ -125,7 +125,7 @@ fn setup(
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
 
-    spawn_current_tetromino(
+    spawn_tetromino(
         &mut commands,
         &matrix,
         &mut materials,
@@ -145,7 +145,7 @@ fn setup(
     ;
 }
 
-fn move_current_tetromino(
+fn move_tetromino(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -153,8 +153,8 @@ fn move_current_tetromino(
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
-    matrix_query: Query<&Matrix>,
-    mut tetromino_query: Query<
+    matrix: Query<&Matrix>,
+    mut tetromino: Query<
         (Entity, &mut MatrixPosition), With<Tetromino>
     >,
     mut tetromino_type: ResMut<TetrominoType>,
@@ -178,7 +178,7 @@ fn move_current_tetromino(
 
     // Each of the four blocks making up the current tetromino has,
     // appropriately, the 'Tetromino' component
-    let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino_query
+    let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino
         .iter_mut()
         .unzip()
     ;
@@ -189,7 +189,7 @@ fn move_current_tetromino(
         .collect::<Vec<_>>()
     ;
 
-    let matrix = matrix_query.single().unwrap();
+    let matrix = matrix.single().unwrap();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
@@ -208,7 +208,7 @@ fn move_current_tetromino(
             &matrix,
         );
 
-        spawn_current_tetromino(
+        spawn_tetromino(
             &mut commands,
             &matrix,
             &mut materials,
@@ -296,7 +296,7 @@ fn move_current_tetromino(
             T | Z | S | L | J => 3,
         };
 
-        rotate_tetromino_block(
+        rotate_tetromino(
             &mut tetromino_pos,
             rotation_grid_size,
             &matrix,
@@ -349,7 +349,7 @@ fn move_current_tetromino(
             &matrix,
         );
 
-        spawn_current_tetromino(
+        spawn_tetromino(
             &mut commands,
             &matrix,
             &mut materials,
@@ -405,7 +405,7 @@ fn add_tetromino_to_heap(
     ;
 }
 
-fn rotate_tetromino_block(
+fn rotate_tetromino(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     rotation_grid_size: i32,
     matrix: &Matrix,
@@ -438,7 +438,7 @@ fn rotate_tetromino_block(
     }
 }
 
-fn spawn_current_tetromino(
+fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
     materials: &mut ResMut<Assets<ColorMaterial>>,
