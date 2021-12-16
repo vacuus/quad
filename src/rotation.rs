@@ -16,19 +16,24 @@ pub fn rotate_tetromino(
         T | Z | S | L | J => 3,
     };
 
+    let min_x = tetromino_pos.iter().map(|pos| pos.x).min().unwrap();
+    let min_y = tetromino_pos.iter().map(|pos| pos.y).min().unwrap();
+
+    let center_x = min_x + rotation_grid_size / 2;
+    let center_y = min_y + rotation_grid_size / 2;
+
     let mut offset = 0;
 
     for pos in &mut *tetromino_pos {
-        let x = pos.x;
-        let y = pos.y;
-        let rotation_grid_size = rotation_grid_size - 1;
+        let x = pos.x - center_x;
+        let y = pos.y - center_y;
 
         if clockwise {
-            pos.x = y;
-            pos.y = rotation_grid_size - x;
+            pos.x = y + center_x;
+            pos.y = -x + center_y;
         } else {
-            pos.x = rotation_grid_size - y;
-            pos.y = x;
+            pos.x = -y + center_x;
+            pos.y = x + center_y;
         }
 
         if pos.x < 0 {
