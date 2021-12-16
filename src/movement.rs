@@ -159,16 +159,9 @@ pub fn move_tetromino(
 
     // Rotation
     if let Some(clockwise) = rotate_clockwise {
-        use TetrominoType::*;
-
-        let rotation_grid_size = match *tetromino_type {
-            I | O => 4,
-            T | Z | S | L | J => 3,
-        };
-
         rotate_tetromino(
             &mut tetromino_pos,
-            rotation_grid_size,
+            *tetromino_type,
             &matrix,
             clockwise,
         );
