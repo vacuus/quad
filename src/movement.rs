@@ -31,20 +31,17 @@ pub fn move_tetromino(
     >,
     mut tetromino_type: ResMut<TetrominoType>,
 ) {
-
     // Each of the four blocks making up the current tetromino has,
     // appropriately, the 'Tetromino' component
     let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino
         .iter_mut()
         .unzip()
     ;
-
     let prev_positions = tetromino_pos
         .iter()
         .map(|pos| **pos)
         .collect::<Vec<_>>()
     ;
-
     let matrix = matrix.single().unwrap();
 
     // Hard drop
@@ -63,14 +60,12 @@ pub fn move_tetromino(
             &tetromino_pos,
             &matrix,
         );
-
         spawn_tetromino(
             &mut commands,
             &matrix,
             &mut materials,
             &mut tetromino_type,
         );
-
         return;
     }
 
@@ -118,7 +113,6 @@ pub fn move_tetromino(
 
     // Soft drop
     soft_drop_timer.0.tick(time.delta());
-
     if soft_drop_timer.0.just_finished() {
         move_y -= 1;
         soft_drop_timer.0.reset();
@@ -136,7 +130,6 @@ pub fn move_tetromino(
             x_offset = x_offset.min(matrix.width - pos.x - 1);
         }
     });
-
     tetromino_pos.iter_mut().for_each(|pos| pos.x += x_offset);
 
     let mut y_offset = 0;
@@ -145,7 +138,6 @@ pub fn move_tetromino(
         pos.y += move_y;
         y_offset = y_offset.max(-pos.y);
     });
-
     tetromino_pos.iter_mut().for_each(|pos| pos.y += y_offset);
 
 
@@ -209,7 +201,6 @@ pub fn move_tetromino(
             &tetromino_pos,
             &matrix,
         );
-
         spawn_tetromino(
             &mut commands,
             &matrix,

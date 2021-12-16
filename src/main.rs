@@ -22,7 +22,7 @@ fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
-        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.03125, true)))
+        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.0625, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
@@ -75,13 +75,11 @@ fn update_block_sprites(
     let matrix = matrix.single().unwrap();
 
     for (position, mut transform) in block.iter_mut() {
-        let new_x = BLOCK_SIZE *
+        transform.translation.x = BLOCK_SIZE *
             (position.x as f32 - matrix.width as f32 * 0.5 + 0.5)
         ;
-        let new_y = BLOCK_SIZE *
+        transform.translation.y = BLOCK_SIZE *
             (position.y as f32 - matrix.height as f32 * 0.5 + 0.5)
         ;
-
-        *transform = Transform::from_xyz(new_x, new_y, transform.translation.z);
     }
 }

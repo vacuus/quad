@@ -92,7 +92,12 @@ pub fn spawn_tetromino(
                 material: materials.add(color.into()),
                 sprite: Sprite::new(Vec2::splat(BLOCK_SIZE)),
                 transform: Transform::from_translation(
-                    Vec3::new(0.0, 0.0, 1.0)
+                    Vec3::new(
+                        (x + 3) as f32 * BLOCK_SIZE,
+                        (matrix.height - tetromino_matrix_size + y) as f32
+                            * BLOCK_SIZE,
+                        1.0,
+                    )
                 ),
                 ..Default::default()
             })
