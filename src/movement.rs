@@ -149,9 +149,9 @@ pub fn move_tetromino(
     tetromino_pos.iter_mut().for_each(|pos| pos.y += y_offset);
 
 
-    let rotate_clockwise = if keyboard_input.pressed(KeyCode::X) {
+    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
         Some(true)
-    } else if keyboard_input.pressed(KeyCode::Z) {
+    } else if keyboard_input.just_pressed(KeyCode::Z) {
         Some(false)
     } else {
         None
