@@ -12,7 +12,7 @@ Feel free to mention preferences in issues or use this code (so long as you mind
 ___
 
 TODO:
-* Get it to run
+* Fix the rotation system
 
 (long term)
 * Screenshots of running program
