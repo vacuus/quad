@@ -87,23 +87,21 @@ pub fn spawn_tetromino(
     );
 
     for (x, y) in positions {
+        let x = x + 3;
+        let y = matrix.height - tetromino_matrix_size + y;
+
         commands
             .spawn_bundle(SpriteBundle {
                 material: materials.add(color.into()),
                 sprite: Sprite::new(Vec2::splat(BLOCK_SIZE)),
                 transform: Transform::from_translation(
-                    Vec3::new(
-                        (x + 3) as f32 * BLOCK_SIZE,
-                        (matrix.height - tetromino_matrix_size + y) as f32
-                            * BLOCK_SIZE,
-                        1.0,
-                    )
+                    Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 1.0)
                 ),
                 ..Default::default()
             })
             .insert(MatrixPosition {
-                x: x + 3,
-                y: matrix.height - tetromino_matrix_size + y,
+                x,
+                y,
             })
             .insert(Tetromino)
         ;
