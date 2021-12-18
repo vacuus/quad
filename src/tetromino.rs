@@ -12,7 +12,7 @@ pub struct Tetromino;
 
 impl Tetromino {
     fn blocks_from_type(tetromino_type: TetrominoType)
-    -> (i32, Color, [(i32, i32); 4]) {
+    -> (i16, Color, [(i16, i16); 4]) {
         use self::TetrominoType::*;
     
         let matrix_size = match tetromino_type {
