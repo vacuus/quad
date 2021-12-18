@@ -3,13 +3,33 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::rotation::rotate_tetromino;
 use crate::heap::add_tetromino_to_heap;
 use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
+use core::ops::{Deref, DerefMut};
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
 pub struct MoveTetrominoSystem;
 
-pub struct SoftDropTimer(pub Timer);
+macro_rules! timer {
+    ($ty:ident) => {
+        pub struct $ty(pub Timer);
 
-pub struct MoveTetrominoTimer(pub Timer);
+        impl Deref for $ty {
+            type Target = Timer;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl DerefMut for $ty {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+    }
+}
+
+timer!(SoftDropTimer);
+timer!(MoveTetrominoTimer);
 
 pub enum Direction {
     Down,
@@ -26,9 +46,7 @@ pub fn move_tetromino(
     mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
     matrix: Query<&Matrix>,
-    mut tetromino: Query<
-        (Entity, &mut MatrixPosition), With<Tetromino>
-    >,
+    mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
     mut tetromino_type: ResMut<TetrominoType>,
 ) {
     // Each of the four blocks making up the current tetromino has,
@@ -85,10 +103,10 @@ pub fn move_tetromino(
         0
     };
 
-    move_tetromino_timer.0.tick(time.delta());
+    move_tetromino_timer.tick(time.delta());
 
-    if move_tetromino_timer.0.just_finished() {
-        move_tetromino_timer.0.reset();
+    if move_tetromino_timer.just_finished() {
+        move_tetromino_timer.reset();
     } else {
         // Ignore movement input, but soft drop still takes effect
         move_x = 0;
@@ -107,10 +125,10 @@ pub fn move_tetromino(
     }
 
     // Soft drop
-    soft_drop_timer.0.tick(time.delta());
-    if soft_drop_timer.0.just_finished() {
+    soft_drop_timer.tick(time.delta());
+    if soft_drop_timer.just_finished() {
         move_y -= 1;
-        soft_drop_timer.0.reset();
+        soft_drop_timer.reset();
     }
 
     // Apply playing board bounds
