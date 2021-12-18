@@ -11,7 +11,7 @@ pub struct SoftDropTimer(pub Timer);
 
 pub struct MoveTetrominoTimer(pub Timer);
 
-enum Direction {
+pub enum Direction {
     Down,
     Left,
     Right,
@@ -37,18 +37,13 @@ pub fn move_tetromino(
         .iter_mut()
         .unzip()
     ;
-    let prev_positions = tetromino_pos
-        .iter()
-        .map(|pos| **pos)
-        .collect::<Vec<_>>()
-    ;
     let matrix = matrix.single().unwrap();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(&tetromino_pos, &matrix, Direction::Down, &*heap) {
+        while can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
 
@@ -102,7 +97,7 @@ pub fn move_tetromino(
 
     // Check if moving left/right is legal
     if move_x == -1
-        && !can_move(&tetromino_pos, &matrix, Direction::Left, &*heap)
+        && !can_move(&tetromino_pos, &matrix, Direction::Left, &heap)
     {
         move_x = 0;
     } else if move_x == 1
@@ -155,44 +150,12 @@ pub fn move_tetromino(
             &mut tetromino_pos,
             *tetromino_type,
             &matrix,
+            &heap,
             clockwise,
         );
     }
 
     if !can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
-        if rotate_clockwise.is_some() {
-            let mut should_revert = true;
-
-            let try_moves = [
-                (1, 0),
-                (2, 0),
-                (-1, 0),
-                (-2, 0),
-                (-1, -2), // T spins
-                (1, -2),
-            ];
-
-            for try_move in &try_moves {
-                tetromino_pos.iter_mut().for_each(|pos| {
-                    pos.x += try_move.0;
-                    pos.y += try_move.1;
-                });
-
-                if can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
-                    should_revert = false;
-                    break;
-                }
-            }
-
-            if should_revert {
-                tetromino_pos
-                    .iter_mut()
-                    .zip(&prev_positions)
-                    .for_each(|(pos, prev_pos)| **pos = *prev_pos)
-                ;
-            }
-        }
-
         // Revert movement and add to heap
         add_tetromino_to_heap(
             &mut commands,
@@ -210,7 +173,7 @@ pub fn move_tetromino(
     }
 }
 
-fn can_move(
+pub fn can_move(
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix: &Matrix,
     direction: Direction,

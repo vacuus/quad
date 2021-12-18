@@ -1,8 +1,46 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoType;
+use crate::movement::{Direction, can_move};
 
 pub fn rotate_tetromino(
+    tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
+    tetromino_type: TetrominoType,
+    matrix: &Matrix,
+    heap: &Vec<Option<()>>,
+    clockwise: bool,
+) {
+    let prev_positions = tetromino_pos
+        .iter()
+        .map(|pos| **pos)
+        .collect::<Vec<_>>()
+    ;
+
+    basic_rotation(tetromino_pos, tetromino_type, &matrix, clockwise);
+
+    if !can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
+        // T spins: (1, -2)
+        let try_moves = [(1, 0), (2, 0), (-1, 0), (-2, 0), (-1, -2)];
+        for try_move in &try_moves {
+            tetromino_pos.iter_mut().for_each(|pos| {
+                pos.x += try_move.0;
+                pos.y += try_move.1;
+            });
+    
+            if can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
+                return;
+            }
+        }
+
+        tetromino_pos
+            .iter_mut()
+            .zip(&prev_positions)
+            .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+        ;
+    }
+}
+
+fn basic_rotation(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     tetromino_type: TetrominoType,
     matrix: &Matrix,
