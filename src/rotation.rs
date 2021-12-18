@@ -21,12 +21,8 @@ pub fn rotate_tetromino(
     if !can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
         // T spins: (1, -2)
         let try_moves = [(1, 0), (2, 0), (-1, 0), (-2, 0), (-1, -2)];
-        for try_move in &try_moves {
-            tetromino_pos.iter_mut().for_each(|pos| {
-                pos.x += try_move.0;
-                pos.y += try_move.1;
-            });
-    
+        for try_move in try_moves {
+            tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
             if can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
                 return;
             }
