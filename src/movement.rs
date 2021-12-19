@@ -104,10 +104,7 @@ pub fn move_tetromino(
     };
 
     move_tetromino_timer.tick(time.delta());
-
-    if move_tetromino_timer.just_finished() {
-        move_tetromino_timer.reset();
-    } else {
+    if !move_tetromino_timer.just_finished() {
         // Ignore movement input, but soft drop still takes effect
         move_x = 0;
         move_y = 0;
@@ -128,7 +125,6 @@ pub fn move_tetromino(
     soft_drop_timer.tick(time.delta());
     if soft_drop_timer.just_finished() {
         move_y -= 1;
-        soft_drop_timer.reset();
     }
 
     // Apply playing board bounds
