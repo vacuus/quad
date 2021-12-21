@@ -31,10 +31,13 @@ macro_rules! timer {
 timer!(SoftDropTimer);
 timer!(MoveTetrominoTimer);
 
+#[derive(Copy, Clone)]
 pub enum Direction {
-    Down,
+    DownBy1,
+    DownBy2,
     Left,
     Right,
+    Neutral,
 }
 
 pub fn move_tetromino(
@@ -61,7 +64,7 @@ pub fn move_tetromino(
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
+        while can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
 
@@ -116,15 +119,30 @@ pub fn move_tetromino(
         move_y -= 1;
     }
 
-    // Check if moving left/right is legal
-    if move_x == -1
-        && !can_move(&tetromino_pos, &matrix, Direction::Left, &heap)
-    {
-        move_x = 0;
-    } else if move_x == 1
-        && !can_move(&tetromino_pos, &matrix, Direction::Right, &*heap)
-    {
-        move_x = 0;
+    use self::Direction::*;
+
+    let direction = match (move_x, move_y) {
+        (0, 0) => Neutral,
+        (-1, _) => Left,
+        (1, _) => Right,
+        (_, -1) => DownBy1,
+        // Though improbable, the user and the soft drop could each decrement
+        // 'move_y' on the same frame
+        (_, -2) => DownBy2,
+        _ => unreachable!(),
+    };
+    // Check if moving is legal
+    if !can_move(&tetromino_pos, &matrix, direction, &heap) {
+        match direction {
+            Left | Right => move_x = 0,
+            DownBy1 => move_y = 0,
+            DownBy2 => if can_move(&tetromino_pos, &matrix, DownBy1, &heap) {
+                move_y = -1;
+            } else {
+                move_y = 0;
+            },
+            Neutral => {},
+        }
     }
 
     tetromino_pos.iter_mut().for_each(|pos| {
@@ -151,7 +169,7 @@ pub fn move_tetromino(
         );
     }
 
-    if !can_move(&tetromino_pos, &matrix, Direction::Down, &heap) {
+    if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
         // Revert movement and add to heap
         add_tetromino_to_heap(
             &mut commands,
@@ -181,9 +199,11 @@ pub fn can_move(
             use self::Direction::*;
 
             let (x, y) = match direction {
-                Down => (pos.x, pos.y - 1),
+                DownBy1 => (pos.x, pos.y - 1),
+                DownBy2 => (pos.x, pos.y - 2),
                 Left => (pos.x - 1, pos.y),
                 Right => (pos.x + 1, pos.y),
+                Neutral => return true,
             };
             let maybe_in_heap = match heap.get(
                 (x + y * matrix.width) as usize
