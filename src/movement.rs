@@ -110,6 +110,12 @@ pub fn move_tetromino(
         move_y = 0;
     }
 
+    // Soft drop
+    soft_drop_timer.tick(time.delta());
+    if soft_drop_timer.just_finished() {
+        move_y -= 1;
+    }
+
     // Check if moving left/right is legal
     if move_x == -1
         && !can_move(&tetromino_pos, &matrix, Direction::Left, &heap)
@@ -121,34 +127,10 @@ pub fn move_tetromino(
         move_x = 0;
     }
 
-    // Soft drop
-    soft_drop_timer.tick(time.delta());
-    if soft_drop_timer.just_finished() {
-        move_y -= 1;
-    }
-
-    // Apply playing board bounds
-    let mut x_offset = 0;
-
     tetromino_pos.iter_mut().for_each(|pos| {
         pos.x += move_x;
-
-        if move_x == -1 {
-            x_offset = x_offset.max(-pos.x);
-        } else {
-            x_offset = x_offset.min(matrix.width - pos.x - 1);
-        }
-    });
-    tetromino_pos.iter_mut().for_each(|pos| pos.x += x_offset);
-
-    let mut y_offset = 0;
-
-    tetromino_pos.iter_mut().for_each(|pos| {
         pos.y += move_y;
-        y_offset = y_offset.max(-pos.y);
     });
-    tetromino_pos.iter_mut().for_each(|pos| pos.y += y_offset);
-
 
     let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
         Some(true)
@@ -203,10 +185,15 @@ pub fn can_move(
                 Left => (pos.x - 1, pos.y),
                 Right => (pos.x + 1, pos.y),
             };
-
-            pos.y > 0 && match heap.get((x + y * matrix.width) as usize) {
+            let maybe_in_heap = match heap.get(
+                (x + y * matrix.width) as usize
+            ) {
                 Some(None) => true,
                 _ => false,
-            }
+            };
+
+            // invalid x or y will still likely produce a valid index into
+            // 'heap'; the index is only accurate if x and y are in bounds
+            x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap
         })
 }
