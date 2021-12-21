@@ -97,7 +97,6 @@ pub fn move_tetromino(
     } else {
         0
     };
-
     let mut move_y = if keyboard_input.pressed(KeyCode::K)
         || keyboard_input.pressed(KeyCode::Down)
     {
@@ -105,6 +104,14 @@ pub fn move_tetromino(
     } else {
         0
     };
+
+    if move_x != 0 && move_y != 0 {
+        if rand::random::<bool>() {
+            move_x = 0;
+        } else {
+            move_y = 0;
+        }
+    }
 
     move_tetromino_timer.tick(time.delta());
     if !move_tetromino_timer.just_finished() {
@@ -150,13 +157,16 @@ pub fn move_tetromino(
         pos.y += move_y;
     });
 
-    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
+    let mut rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
         Some(true)
     } else if keyboard_input.just_pressed(KeyCode::Z) {
         Some(false)
     } else {
         None
     };
+    if move_x != 0 || move_y != 0 {
+        rotate_clockwise = None;
+    }
 
     // Rotation
     if let Some(clockwise) = rotate_clockwise {

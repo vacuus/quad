@@ -21,8 +21,8 @@ const BLOCK_SIZE: f32 = 25.0;
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .insert_resource(SoftDropTimer(Timer::from_seconds(0.750, true)))
-        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.0625, true)))
+        .insert_resource(SoftDropTimer(Timer::from_seconds(0.75, true)))
+        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.08, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
