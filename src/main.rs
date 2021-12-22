@@ -10,6 +10,7 @@ use movement::{
     MoveTetrominoSystem,
     SoftDropTimer,
     MoveTetrominoTimer,
+    LockDelayTimer,
 };
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{TetrominoType, spawn_tetromino};
@@ -23,6 +24,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(SoftDropTimer(Timer::from_seconds(0.75, true)))
         .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.08, true)))
+        .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
@@ -39,8 +41,8 @@ fn setup(
     mut heap: ResMut<Vec<Option<()>>>,
 ) {
     let matrix = Matrix {
-        width: 10,
-        height: 22,
+        width: 15,
+        height: 25,
     };
 
     *heap = vec![None; (matrix.width * matrix.height) as usize];

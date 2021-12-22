@@ -19,7 +19,6 @@ macro_rules! timer {
                 &self.0
             }
         }
-
         impl DerefMut for $ty {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.0
@@ -30,6 +29,7 @@ macro_rules! timer {
 
 timer!(SoftDropTimer);
 timer!(MoveTetrominoTimer);
+timer!(LockDelayTimer);
 
 #[derive(Copy, Clone)]
 pub enum Direction {
@@ -47,6 +47,7 @@ pub fn move_tetromino(
     time: Res<Time>,
     mut soft_drop_timer: ResMut<SoftDropTimer>,
     mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
+    mut lock_delay_timer: ResMut<LockDelayTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
     matrix: Query<&Matrix>,
     mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
@@ -86,72 +87,74 @@ pub fn move_tetromino(
     }
 
 
+    use self::Direction::*;
+
     let mut move_x = if keyboard_input.pressed(KeyCode::J)
         || keyboard_input.pressed(KeyCode::Left)
     {
-        -1
+        Left
     } else if keyboard_input.pressed(KeyCode::L)
         || keyboard_input.pressed(KeyCode::Right)
     {
-        1
+        Right
     } else {
-        0
+        Neutral
     };
     let mut move_y = if keyboard_input.pressed(KeyCode::K)
         || keyboard_input.pressed(KeyCode::Down)
     {
-        -1
+        DownBy1
     } else {
-        0
+        Neutral
     };
-
-    if move_x != 0 && move_y != 0 {
-        if rand::random::<bool>() {
-            move_x = 0;
-        } else {
-            move_y = 0;
-        }
-    }
 
     move_tetromino_timer.tick(time.delta());
     if !move_tetromino_timer.just_finished() {
         // Ignore movement input, but soft drop still takes effect
-        move_x = 0;
-        move_y = 0;
+        move_x = Neutral;
+        move_y = Neutral;
     }
 
     // Soft drop
     soft_drop_timer.tick(time.delta());
     if soft_drop_timer.just_finished() {
-        move_y -= 1;
-    }
-
-    use self::Direction::*;
-
-    let direction = match (move_x, move_y) {
-        (0, 0) => Neutral,
-        (-1, _) => Left,
-        (1, _) => Right,
-        (_, -1) => DownBy1,
-        // Though improbable, the user and the soft drop could each decrement
-        // 'move_y' on the same frame
-        (_, -2) => DownBy2,
-        _ => unreachable!(),
-    };
-    // Check if moving is legal
-    if !can_move(&tetromino_pos, &matrix, direction, &heap) {
-        match direction {
-            Left | Right => move_x = 0,
-            DownBy1 => move_y = 0,
-            DownBy2 => if can_move(&tetromino_pos, &matrix, DownBy1, &heap) {
-                move_y = -1;
-            } else {
-                move_y = 0;
-            },
-            Neutral => {},
+        move_y = match move_y {
+            Neutral => DownBy1,
+            // Though unlikely, the user and the soft drop could each
+            // decrement 'move_y' on the same frame
+            DownBy1 => DownBy2,
+            _ => unreachable!(),
         }
     }
 
+    // Check if moving is legal
+    if !can_move(&tetromino_pos, &matrix, move_x, &heap) {
+        move_x = Neutral;
+    }
+    if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
+        move_y = match move_y {
+            DownBy1 => Neutral,
+            DownBy2 => if !can_move(&tetromino_pos, &matrix, DownBy1, &heap) {
+                Neutral
+            } else {
+                DownBy1
+            },
+            _ => unreachable!(),
+        }
+    }
+
+    let move_x = match move_x {
+        Neutral => 0,
+        Left => -1,
+        Right => 1,
+        _ => unreachable!(),
+    };
+    let move_y = match move_y {
+        Neutral => 0,
+        DownBy1 => -1,
+        DownBy2 => -2,
+        _ => unreachable!(),
+    };
     tetromino_pos.iter_mut().for_each(|pos| {
         pos.x += move_x;
         pos.y += move_y;
@@ -179,7 +182,14 @@ pub fn move_tetromino(
         );
     }
 
+    if move_x != 0 || move_y != 0 || rotate_clockwise.is_some() {
+        lock_delay_timer.reset();
+    }
     if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+        lock_delay_timer.tick(time.delta());
+        if !lock_delay_timer.just_finished() {
+            return;
+        }
         // Revert movement and add to heap
         add_tetromino_to_heap(
             &mut commands,
