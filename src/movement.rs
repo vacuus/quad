@@ -27,7 +27,7 @@ macro_rules! timer {
     }
 }
 
-timer!(SoftDropTimer);
+timer!(GravityTimer);
 timer!(MoveTetrominoTimer);
 timer!(LockDelayTimer);
 
@@ -45,7 +45,7 @@ pub fn move_tetromino(
     mut materials: ResMut<Assets<ColorMaterial>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut soft_drop_timer: ResMut<SoftDropTimer>,
+    mut gravity_timer: ResMut<GravityTimer>,
     mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
@@ -116,8 +116,8 @@ pub fn move_tetromino(
     }
 
     // Soft drop
-    soft_drop_timer.tick(time.delta());
-    if soft_drop_timer.just_finished() {
+    gravity_timer.tick(time.delta());
+    if gravity_timer.just_finished() {
         move_y = match move_y {
             Neutral => DownBy1,
             // Though unlikely, the user and the soft drop could each

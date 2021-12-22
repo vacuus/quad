@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use movement::{
     move_tetromino,
     MoveTetrominoSystem,
-    SoftDropTimer,
+    GravityTimer,
     MoveTetrominoTimer,
     LockDelayTimer,
 };
@@ -22,7 +22,7 @@ const BLOCK_SIZE: f32 = 25.0;
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .insert_resource(SoftDropTimer(Timer::from_seconds(0.75, true)))
+        .insert_resource(GravityTimer(Timer::from_seconds(0.75, true)))
         .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.08, true)))
         .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, true)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
