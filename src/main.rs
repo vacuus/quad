@@ -6,10 +6,10 @@ mod heap;
 
 use bevy::prelude::*;
 use movement::{
-    move_tetromino,
-    MoveTetrominoSystem,
+    movement,
+    MovementSystem,
     GravityTimer,
-    MoveTetrominoTimer,
+    MovementTimer,
     LockDelayTimer,
 };
 use matrix::{Matrix, MatrixPosition};
@@ -22,14 +22,14 @@ const BLOCK_SIZE: f32 = 25.0;
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .insert_resource(GravityTimer(Timer::from_seconds(0.75, true)))
-        .insert_resource(MoveTetrominoTimer(Timer::from_seconds(0.08, true)))
-        .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, true)))
+        .insert_resource(GravityTimer(Timer::from_seconds(0.75, false)))
+        .insert_resource(MovementTimer(Timer::from_seconds(0.08, false)))
+        .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, false)))
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
-        .add_system(move_tetromino.system().label(MoveTetrominoSystem))
-        .add_system(update_block_sprites.system().after(MoveTetrominoSystem))
+        .add_system(movement.system().label(MovementSystem))
+        .add_system(update_block_sprites.system().after(MovementSystem))
         .run()
     ;
 }

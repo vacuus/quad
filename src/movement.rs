@@ -6,7 +6,7 @@ use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
 use core::ops::{Deref, DerefMut};
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct MoveTetrominoSystem;
+pub struct MovementSystem;
 
 macro_rules! timer {
     ($ty:ident) => {
@@ -28,7 +28,7 @@ macro_rules! timer {
 }
 
 timer!(GravityTimer);
-timer!(MoveTetrominoTimer);
+timer!(MovementTimer);
 timer!(LockDelayTimer);
 
 #[derive(Copy, Clone)]
@@ -40,13 +40,13 @@ pub enum Direction {
     Neutral,
 }
 
-pub fn move_tetromino(
+pub fn movement(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut gravity_timer: ResMut<GravityTimer>,
-    mut move_tetromino_timer: ResMut<MoveTetrominoTimer>,
+    mut movement_timer: ResMut<MovementTimer>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
     mut heap: ResMut<Vec<Option<()>>>,
     matrix: Query<&Matrix>,
@@ -108,11 +108,13 @@ pub fn move_tetromino(
         Neutral
     };
 
-    move_tetromino_timer.tick(time.delta());
-    if !move_tetromino_timer.just_finished() {
+    movement_timer.tick(time.delta());
+    if !movement_timer.just_finished() {
         // Ignore movement input, but soft drop still takes effect
         move_x = Neutral;
         move_y = Neutral;
+    } else {
+        movement_timer.reset();
     }
 
     // Soft drop
@@ -124,7 +126,8 @@ pub fn move_tetromino(
             // decrement 'move_y' on the same frame
             DownBy1 => DownBy2,
             _ => unreachable!(),
-        }
+        };
+        gravity_timer.reset();
     }
 
     // Check if moving is legal
@@ -190,6 +193,7 @@ pub fn move_tetromino(
         if !lock_delay_timer.just_finished() {
             return;
         }
+        lock_delay_timer.reset();
         // Revert movement and add to heap
         add_tetromino_to_heap(
             &mut commands,
