@@ -6,8 +6,9 @@ use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
 use core::ops::{Deref, DerefMut};
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct MovementSystem;
+pub struct MovementSystemLabel;
 
+// Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident) => {
         pub struct $ty(pub Timer);
@@ -31,7 +32,7 @@ timer!(GravityTimer);
 timer!(MovementTimer);
 timer!(LockDelayTimer);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Direction {
     DownBy1,
     DownBy2,
@@ -53,8 +54,7 @@ pub fn movement(
     mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
     mut tetromino_type: ResMut<TetrominoType>,
 ) {
-    // Each of the four blocks making up the current tetromino has,
-    // appropriately, the 'Tetromino' component
+    // Each block of the tetromino has, appropriately, the `Tetromino` component
     let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino
         .iter_mut()
         .unzip()
@@ -69,7 +69,7 @@ pub fn movement(
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
 
-        // Revert movement and add to heap
+        // Revert movement and add tetromino to heap
         add_tetromino_to_heap(
             &mut commands,
             &tetromino_ents,
@@ -89,6 +89,7 @@ pub fn movement(
 
     use self::Direction::*;
 
+    // Get movement input
     let mut move_x = if keyboard_input.pressed(KeyCode::J)
         || keyboard_input.pressed(KeyCode::Left)
     {
@@ -108,16 +109,17 @@ pub fn movement(
         Neutral
     };
 
+    // Only allow movement every so often
     movement_timer.tick(time.delta());
     if !movement_timer.just_finished() {
-        // Ignore movement input, but soft drop still takes effect
+        // Ignore movement input, but gravity can still take effect
         move_x = Neutral;
         move_y = Neutral;
     } else {
         movement_timer.reset();
     }
 
-    // Soft drop
+    // Gravity
     gravity_timer.tick(time.delta());
     if gravity_timer.just_finished() {
         move_y = match move_y {
@@ -130,7 +132,7 @@ pub fn movement(
         gravity_timer.reset();
     }
 
-    // Check if moving is legal
+    // Check if movement is legal
     if !can_move(&tetromino_pos, &matrix, move_x, &heap) {
         move_x = Neutral;
     }
@@ -146,34 +148,30 @@ pub fn movement(
         }
     }
 
-    let move_x = match move_x {
-        Neutral => 0,
-        Left => -1,
-        Right => 1,
-        _ => unreachable!(),
-    };
-    let move_y = match move_y {
-        Neutral => 0,
-        DownBy1 => -1,
-        DownBy2 => -2,
-        _ => unreachable!(),
-    };
+    // Apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
-        pos.x += move_x;
-        pos.y += move_y;
+        pos.x += match move_x {
+            Neutral => 0,
+            Left => -1,
+            Right => 1,
+            _ => unreachable!(),
+        };
+        pos.y += match move_y {
+            Neutral => 0,
+            DownBy1 => -1,
+            DownBy2 => -2,
+            _ => unreachable!(),
+        };
     });
 
-    let mut rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
+    // Get rotation input
+    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
         Some(true)
     } else if keyboard_input.just_pressed(KeyCode::Z) {
         Some(false)
     } else {
         None
     };
-    if move_x != 0 || move_y != 0 {
-        rotate_clockwise = None;
-    }
-
     // Rotation
     if let Some(clockwise) = rotate_clockwise {
         rotate_tetromino(
@@ -185,16 +183,18 @@ pub fn movement(
         );
     }
 
-    if move_x != 0 || move_y != 0 || rotate_clockwise.is_some() {
+    // Reset lock delay if any input
+    if move_x != Neutral || move_y != Neutral || rotate_clockwise.is_some() {
         lock_delay_timer.reset();
     }
     if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+        // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
         if !lock_delay_timer.just_finished() {
             return;
         }
         lock_delay_timer.reset();
-        // Revert movement and add to heap
+        // Revert movement and add tetromino to heap
         add_tetromino_to_heap(
             &mut commands,
             &tetromino_ents,
@@ -222,6 +222,7 @@ pub fn can_move(
         .all(|pos| {
             use self::Direction::*;
 
+            // Get neighboring position in relevant direction
             let (x, y) = match direction {
                 DownBy1 => (pos.x, pos.y - 1),
                 DownBy2 => (pos.x, pos.y - 2),
@@ -229,6 +230,7 @@ pub fn can_move(
                 Right => (pos.x + 1, pos.y),
                 Neutral => return true,
             };
+            // Check if the neighboring position is occupied in the heap
             let maybe_in_heap = match heap.get(
                 (x + y * matrix.width) as usize
             ) {
@@ -236,7 +238,7 @@ pub fn can_move(
                 _ => false,
             };
 
-            // invalid x or y will still likely produce a valid index into
+            // Invalid x or y will still likely produce a valid index into
             // 'heap'; the index is only accurate if x and y are in bounds
             x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap
         })

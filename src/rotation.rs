@@ -10,6 +10,7 @@ pub fn rotate_tetromino(
     heap: &Vec<Option<()>>,
     clockwise: bool,
 ) {
+    // Store original positions just in case revert is needed
     let prev_positions = tetromino_pos
         .iter()
         .map(|pos| **pos)
@@ -18,6 +19,7 @@ pub fn rotate_tetromino(
 
     basic_rotation(tetromino_pos, tetromino_type, &matrix, clockwise);
 
+    // Wall kicks
     if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
         // T spins: (1, -2)
         let try_moves = [(1, 0), (2, 0), (-1, 0), (-2, 0), (-1, -2)];

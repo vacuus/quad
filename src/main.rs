@@ -7,7 +7,7 @@ mod heap;
 use bevy::prelude::*;
 use movement::{
     movement,
-    MovementSystem,
+    MovementSystemLabel,
     GravityTimer,
     MovementTimer,
     LockDelayTimer,
@@ -28,8 +28,8 @@ fn main() {
         .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
-        .add_system(movement.system().label(MovementSystem))
-        .add_system(update_block_sprites.system().after(MovementSystem))
+        .add_system(movement.system().label(MovementSystemLabel))
+        .add_system(update_block_sprites.system().after(MovementSystemLabel))
         .run()
     ;
 }

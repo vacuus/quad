@@ -21,6 +21,7 @@ pub fn add_tetromino_to_heap(
     tetromino_pos
         .iter()
         .for_each(|pos| {
+            // Mark position as occupied in heap
             heap[(pos.x + pos.y * matrix.width) as usize] = Some(());
         })
     ;

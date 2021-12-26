@@ -57,6 +57,7 @@ pub enum TetrominoType {
     J,
 }
 
+// Used in pseudorandom generation of tetromino type during spawning
 impl Distribution<TetrominoType> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
         use self::TetrominoType::*;
