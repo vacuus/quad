@@ -14,6 +14,7 @@ use movement::{
 };
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{TetrominoType, spawn_tetromino};
+use heap::HeapEntry;
 
 
 const BLOCK_SIZE: f32 = 25.0;
@@ -25,7 +26,7 @@ fn main() {
         .insert_resource(GravityTimer(Timer::from_seconds(0.75, false)))
         .insert_resource(MovementTimer(Timer::from_seconds(0.08, false)))
         .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, false)))
-        .insert_resource(Vec::<Option<()>>::new()) // just a placeholder
+        .insert_resource(Vec::<HeapEntry>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .add_startup_system(setup.system())
         .add_system(movement.system().label(MovementSystemLabel))
@@ -38,14 +39,14 @@ fn setup(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut tetromino_type: ResMut<TetrominoType>,
-    mut heap: ResMut<Vec<Option<()>>>,
+    mut heap: ResMut<Vec<HeapEntry>>,
 ) {
     let matrix = Matrix {
         width: 15,
         height: 25,
     };
 
-    *heap = vec![None; (matrix.width * matrix.height) as usize];
+    *heap = vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize];
 
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());

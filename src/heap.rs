@@ -2,10 +2,16 @@ use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::Tetromino;
 
+#[derive(Clone)]
+pub enum HeapEntry {
+    Vacant,
+    Occupied,
+}
+
 pub fn add_tetromino_to_heap(
     commands: &mut Commands,
     tetromino_ents: &Vec<Entity>,
-    heap: &mut Vec<Option<()>>,
+    heap: &mut Vec<HeapEntry>,
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix: &Matrix,
 ) {
@@ -22,7 +28,7 @@ pub fn add_tetromino_to_heap(
         .iter()
         .for_each(|pos| {
             // Mark position as occupied in heap
-            heap[(pos.x + pos.y * matrix.width) as usize] = Some(());
+            heap[(pos.x + pos.y * matrix.width) as usize] = HeapEntry::Occupied;
         })
     ;
 }

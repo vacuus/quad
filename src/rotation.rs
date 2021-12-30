@@ -2,12 +2,13 @@ use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoType;
 use crate::movement::{Direction, can_move};
+use crate::heap::HeapEntry;
 
 pub fn rotate_tetromino(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     tetromino_type: TetrominoType,
     matrix: &Matrix,
-    heap: &Vec<Option<()>>,
+    heap: &Vec<HeapEntry>,
     clockwise: bool,
 ) {
     // Store original positions just in case revert is needed

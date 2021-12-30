@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::rotation::rotate_tetromino;
-use crate::heap::add_tetromino_to_heap;
+use crate::heap::{HeapEntry, add_tetromino_to_heap};
 use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
-use core::ops::{Deref, DerefMut};
+use ::core::ops::{Deref, DerefMut};
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
 pub struct MovementSystemLabel;
@@ -49,7 +49,7 @@ pub fn movement(
     mut gravity_timer: ResMut<GravityTimer>,
     mut movement_timer: ResMut<MovementTimer>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
-    mut heap: ResMut<Vec<Option<()>>>,
+    mut heap: ResMut<Vec<HeapEntry>>,
     matrix: Query<&Matrix>,
     mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
     mut tetromino_type: ResMut<TetrominoType>,
@@ -205,7 +205,7 @@ pub fn can_move(
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix: &Matrix,
     direction: Direction,
-    heap: &Vec<Option<()>>,
+    heap: &Vec<HeapEntry>,
 ) -> bool {
     tetromino_pos
         .iter()
@@ -224,7 +224,7 @@ pub fn can_move(
             let maybe_in_heap = match heap.get(
                 (x + y * matrix.width) as usize
             ) {
-                Some(None) => true,
+                Some(HeapEntry::Vacant) => true,
                 _ => false,
             };
 
@@ -239,7 +239,7 @@ fn hard_drop(
     matrix: &Matrix,
     tetromino_ents: &Vec<Entity>,
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
-    mut heap: &mut Vec<Option<()>>,
+    mut heap: &mut Vec<HeapEntry>,
     mut materials: &mut Assets<ColorMaterial>,
     mut tetromino_type: &mut TetrominoType,
 ) {
