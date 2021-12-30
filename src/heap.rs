@@ -5,7 +5,7 @@ use crate::tetromino::Tetromino;
 pub fn add_tetromino_to_heap(
     commands: &mut Commands,
     tetromino_ents: &Vec<Entity>,
-    heap: &mut ResMut<Vec<Option<()>>>,
+    heap: &mut Vec<Option<()>>,
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix: &Matrix,
 ) {

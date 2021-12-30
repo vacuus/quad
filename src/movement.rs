@@ -65,27 +65,17 @@ pub fn movement(
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
-            tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
-        }
-
-        // Revert movement and add tetromino to heap
-        add_tetromino_to_heap(
+        hard_drop(
             &mut commands,
+            &matrix,
             &tetromino_ents,
+            &mut tetromino_pos,
             &mut heap,
-            &tetromino_pos,
-            &matrix,
-        );
-        spawn_tetromino(
-            &mut commands,
-            &matrix,
             &mut materials,
             &mut tetromino_type,
         );
         return;
     }
-
 
     use self::Direction::*;
 
@@ -242,4 +232,33 @@ pub fn can_move(
             // 'heap'; the index is only accurate if x and y are in bounds
             x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap
         })
+}
+
+fn hard_drop(
+    mut commands: &mut Commands,
+    matrix: &Matrix,
+    tetromino_ents: &Vec<Entity>,
+    tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
+    mut heap: &mut Vec<Option<()>>,
+    mut materials: &mut Assets<ColorMaterial>,
+    mut tetromino_type: &mut TetrominoType,
+) {
+    while can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+        tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
+    }
+
+    // Revert movement and add tetromino to heap
+    add_tetromino_to_heap(
+        &mut commands,
+        &tetromino_ents,
+        &mut heap,
+        &tetromino_pos,
+        &matrix,
+    );
+    spawn_tetromino(
+        &mut commands,
+        &matrix,
+        &mut materials,
+        &mut tetromino_type,
+    );
 }

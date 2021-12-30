@@ -78,13 +78,13 @@ impl Distribution<TetrominoType> for Standard {
 pub fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-    tetromino_type: &mut ResMut<TetrominoType>,
+    materials: &mut Assets<ColorMaterial>,
+    tetromino_type: &mut TetrominoType,
 ) {
-    **tetromino_type = rand::random::<TetrominoType>();
+    *tetromino_type = rand::random::<TetrominoType>();
 
     let (tetromino_matrix_size, color, positions) = Tetromino::blocks_from_type(
-        **tetromino_type
+        *tetromino_type
     );
 
     for (x, y) in positions {
