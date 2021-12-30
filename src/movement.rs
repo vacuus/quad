@@ -101,12 +101,12 @@ pub fn movement(
 
     // Only allow movement every so often
     movement_timer.tick(time.delta());
-    if !movement_timer.just_finished() {
+    if movement_timer.just_finished() {
+        movement_timer.reset();
+    } else {
         // Ignore movement input, but gravity can still take effect
         move_x = Neutral;
         move_y = Neutral;
-    } else {
-        movement_timer.reset();
     }
 
     // Gravity
@@ -221,7 +221,7 @@ pub fn can_move(
                 Neutral => return true,
             };
             // Check if the neighboring position is occupied in the heap
-            let maybe_in_heap = match heap.get(
+            let maybe_in_heap = || match heap.get(
                 (x + y * matrix.width) as usize
             ) {
                 Some(HeapEntry::Vacant) => true,
@@ -230,7 +230,7 @@ pub fn can_move(
 
             // Invalid x or y will still likely produce a valid index into
             // 'heap'; the index is only accurate if x and y are in bounds
-            x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap
+            x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap()
         })
 }
 
