@@ -1,45 +1,12 @@
+mod movement_types;
+
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::rotation::rotate_tetromino;
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
 use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
-use ::core::ops::{Deref, DerefMut};
+pub use movement_types::*;
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct MovementSystemLabel;
-
-// Newtype wrapper around a `Timer`
-macro_rules! timer {
-    ($ty:ident) => {
-        pub struct $ty(pub Timer);
-
-        impl Deref for $ty {
-            type Target = Timer;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-        impl DerefMut for $ty {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.0
-            }
-        }
-    }
-}
-
-timer!(GravityTimer);
-timer!(MovementTimer);
-timer!(LockDelayTimer);
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum Direction {
-    DownBy1,
-    DownBy2,
-    Left,
-    Right,
-    Neutral,
-}
 
 pub fn movement(
     mut commands: Commands,
@@ -77,27 +44,27 @@ pub fn movement(
         return;
     }
 
-    use self::Direction::*;
-
     // Get movement input
-    let mut move_x = if keyboard_input.pressed(KeyCode::J)
+    let move_x = if keyboard_input.pressed(KeyCode::J)
         || keyboard_input.pressed(KeyCode::Left)
     {
-        Left
+        X::Left
     } else if keyboard_input.pressed(KeyCode::L)
         || keyboard_input.pressed(KeyCode::Right)
     {
-        Right
+        X::Right
     } else {
-        Neutral
+        X::Neutral
     };
-    let mut move_y = if keyboard_input.pressed(KeyCode::K)
+    let move_y = if keyboard_input.pressed(KeyCode::K)
         || keyboard_input.pressed(KeyCode::Down)
     {
-        DownBy1
+        Y::DownBy1
     } else {
-        Neutral
+        Y::Neutral
     };
+    let mut move_x = Move::X(move_x);
+    let mut move_y = Move::Y(move_y);
 
     // Only allow movement every so often
     movement_timer.tick(time.delta());
@@ -105,51 +72,42 @@ pub fn movement(
         movement_timer.reset();
     } else {
         // Ignore movement input, but gravity can still take effect
-        move_x = Neutral;
-        move_y = Neutral;
+        move_x.set_neutral();
+        move_y.set_neutral();
     }
 
     // Gravity
     gravity_timer.tick(time.delta());
     if gravity_timer.just_finished() {
-        move_y = match move_y {
-            Neutral => DownBy1,
-            // Though unlikely, the user and the soft drop could each
-            // decrement 'move_y' on the same frame
-            DownBy1 => DownBy2,
-            _ => unreachable!(),
-        };
+        move_y.move_down();
         gravity_timer.reset();
     }
 
     // Check if movement is legal
     if !can_move(&tetromino_pos, &matrix, move_x, &heap) {
-        move_x = Neutral;
+        move_x.set_neutral();
     }
     if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
-        move_y = match move_y {
-            DownBy1 => Neutral,
-            DownBy2 => if !can_move(&tetromino_pos, &matrix, DownBy1, &heap) {
-                Neutral
-            } else {
-                DownBy1
-            },
-            _ => unreachable!(),
+        move_y.move_up();
+        if let Move::Y(Y::DownBy1) = move_y {
+            if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
+                move_y.set_neutral();
+            }
         }
     }
 
     // Apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
         pos.x += match move_x {
-            Neutral => 0,
-            Left => -1,
-            Right => 1,
+            Move::X(X::Neutral) => 0,
+            Move::X(X::Left) => -1,
+            Move::X(X::Right) => 1,
             _ => unreachable!(),
         };
         pos.y += match move_y {
-            Neutral => 0,
-            DownBy1 => -1,
-            DownBy2 => -2,
+            Move::Y(Y::Neutral) => 0,
+            Move::Y(Y::DownBy1) => -1,
+            Move::Y(Y::DownBy2) => -2,
             _ => unreachable!(),
         };
     });
@@ -174,10 +132,13 @@ pub fn movement(
     }
 
     // Reset lock delay if any input
-    if move_x != Neutral || move_y != Neutral || rotate_clockwise.is_some() {
+    if move_x != Move::X(X::Neutral)
+        || move_y != Move::Y(Y::Neutral)
+        || rotate_clockwise.is_some()
+    {
         lock_delay_timer.reset();
     }
-    if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+    if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
         if !lock_delay_timer.just_finished() {
@@ -204,21 +165,20 @@ pub fn movement(
 pub fn can_move(
     tetromino_pos: &Vec<Mut<MatrixPosition>>,
     matrix: &Matrix,
-    direction: Direction,
+    movement: Move,
     heap: &Vec<HeapEntry>,
 ) -> bool {
     tetromino_pos
         .iter()
         .all(|pos| {
-            use self::Direction::*;
-
             // Get neighboring position in relevant direction
-            let (x, y) = match direction {
-                DownBy1 => (pos.x, pos.y - 1),
-                DownBy2 => (pos.x, pos.y - 2),
-                Left => (pos.x - 1, pos.y),
-                Right => (pos.x + 1, pos.y),
-                Neutral => return true,
+            let (x, y) = match movement {
+                Move::Y(Y::DownBy1) => (pos.x, pos.y - 1),
+                Move::Y(Y::DownBy2) => (pos.x, pos.y - 2),
+                Move::X(X::Left) => (pos.x - 1, pos.y),
+                Move::X(X::Right) => (pos.x + 1, pos.y),
+                // Neutral; hard drop isn't a possibility at this point
+                _ => return true,
             };
             // Check if the neighboring position is occupied in the heap
             let maybe_in_heap = || match heap.get(
@@ -228,8 +188,8 @@ pub fn can_move(
                 _ => false,
             };
 
-            // Invalid x or y will still likely produce a valid index into
-            // 'heap'; the index is only accurate if x and y are in bounds
+            // Invalid 'x' or 'y' will still likely produce a valid index into
+            // 'heap'; the index is only accurate if 'x' and 'y' are in bounds
             x >= 0 && x < matrix.width && y >= 0 && maybe_in_heap()
         })
 }
@@ -243,7 +203,7 @@ fn hard_drop(
     mut materials: &mut Assets<ColorMaterial>,
     mut tetromino_type: &mut TetrominoType,
 ) {
-    while can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+    while can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
         tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
     }
 

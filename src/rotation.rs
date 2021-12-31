@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoType;
-use crate::movement::{Direction, can_move};
+use crate::movement::{Move, Y, can_move};
 use crate::heap::HeapEntry;
 
 pub fn rotate_tetromino(
@@ -11,6 +11,8 @@ pub fn rotate_tetromino(
     heap: &Vec<HeapEntry>,
     clockwise: bool,
 ) {
+    const MOVE_DOWN_BY_1: Move = Move::Y(Y::DownBy1);
+
     // Store original positions just in case revert is needed
     let prev_positions = tetromino_pos
         .iter()
@@ -21,20 +23,20 @@ pub fn rotate_tetromino(
     basic_rotation(tetromino_pos, tetromino_type, &matrix, clockwise);
 
     // Wall kicks
-    if !can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+    if !can_move(&tetromino_pos, &matrix, MOVE_DOWN_BY_1, &heap) {
         // T spins: (1, -2)
         let try_moves = [(1, 0), (2, 0), (-1, 0), (-2, 0), (-1, -2)];
         for try_move in try_moves {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
-            if can_move(&tetromino_pos, &matrix, Direction::DownBy1, &heap) {
+            if can_move(&tetromino_pos, &matrix, MOVE_DOWN_BY_1, &heap) {
                 return;
             }
         }
 
         tetromino_pos
             .iter_mut()
-            .zip(&prev_positions)
-            .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+            .zip(prev_positions)
+            .for_each(|(pos, prev_pos)| **pos = prev_pos)
         ;
     }
 }
