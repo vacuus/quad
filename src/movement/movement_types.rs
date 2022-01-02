@@ -30,12 +30,13 @@ timer!(LockDelayTimer);
 pub enum Move {
     X(X),
     Y(Y),
+    Neutral,
 }
 
 impl Move {
     pub fn move_down(&mut self) {
         *self = match self {
-            Self::Y(Y::Neutral) => Self::Y(Y::DownBy1),
+            Self::Neutral => Self::Y(Y::DownBy1),
             // Though unlikely, the user and the soft drop could
             // each decrement 'move_y' on the same frame
             Self::Y(Y::DownBy1) => Self::Y(Y::DownBy2),
@@ -45,17 +46,14 @@ impl Move {
 
     pub fn move_up(&mut self) {
         *self = match self {
-            Self::Y(Y::DownBy1) => Self::Y(Y::Neutral),
+            Self::Y(Y::DownBy1) => Self::Neutral,
             Self::Y(Y::DownBy2) => Self::Y(Y::DownBy1),
             _ => *self,
         }
     }
 
     pub fn set_neutral(&mut self) {
-        *self = match self {
-            Self::X(_) => Self::X(X::Neutral),
-            Self::Y(_) => Self::Y(Y::Neutral),
-        }
+        *self = Self::Neutral;
     }
 }
 
@@ -63,7 +61,6 @@ impl Move {
 pub enum X {
     Left,
     Right,
-    Neutral,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -71,5 +68,4 @@ pub enum Y {
     DownBy1,
     DownBy2,
     HardDrop,
-    Neutral,
 }

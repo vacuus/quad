@@ -49,26 +49,24 @@ pub fn movement(
     }
 
     // Get movement input
-    let move_x = if keyboard_input.pressed(KeyCode::J)
+    let mut move_x = if keyboard_input.pressed(KeyCode::J)
         || keyboard_input.pressed(KeyCode::Left)
     {
-        X::Left
+        Move::X(X::Left)
     } else if keyboard_input.pressed(KeyCode::L)
         || keyboard_input.pressed(KeyCode::Right)
     {
-        X::Right
+        Move::X(X::Right)
     } else {
-        X::Neutral
+        Move::Neutral
     };
-    let move_y = if keyboard_input.pressed(KeyCode::K)
+    let mut move_y = if keyboard_input.pressed(KeyCode::K)
         || keyboard_input.pressed(KeyCode::Down)
     {
-        Y::DownBy1
+        Move::Y(Y::DownBy1)
     } else {
-        Y::Neutral
+        Move::Neutral
     };
-    let mut move_x = Move::X(move_x);
-    let mut move_y = Move::Y(move_y);
 
     // Only allow movement every so often
     movement_timer.tick(time.delta());
@@ -103,13 +101,13 @@ pub fn movement(
     // Apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
         pos.x += match move_x {
-            Move::X(X::Neutral) => 0,
+            Move::Neutral => 0,
             Move::X(X::Left) => -1,
             Move::X(X::Right) => 1,
             _ => unreachable!(),
         };
         pos.y += match move_y {
-            Move::Y(Y::Neutral) => 0,
+            Move::Neutral => 0,
             Move::Y(Y::DownBy1) => -1,
             Move::Y(Y::DownBy2) => -2,
             _ => unreachable!(),
@@ -136,8 +134,8 @@ pub fn movement(
     }
 
     // Reset lock delay if any input
-    if move_x != Move::X(X::Neutral)
-        || move_y != Move::Y(Y::Neutral)
+    if move_x != Move::Neutral
+        || move_y != Move::Neutral
         || rotate_clockwise.is_some()
     {
         lock_delay_timer.reset();
@@ -210,8 +208,9 @@ pub fn can_move(
                 Move::Y(Y::DownBy2) => (pos.x, pos.y - 2),
                 Move::X(X::Left) => (pos.x - 1, pos.y),
                 Move::X(X::Right) => (pos.x + 1, pos.y),
-                // Neutral; hard drop isn't a possibility at this point
-                _ => return true,
+                Move::Neutral => (pos.x, pos.y),
+                // Hard drop isn't a possibility at this point
+                Move::Y(Y::HardDrop) => return true,
             };
             // Check if the neighboring position is occupied in the heap
             let maybe_in_heap = || match heap.get(
