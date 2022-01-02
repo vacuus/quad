@@ -147,11 +147,11 @@ pub fn can_move<T>(
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
-    T: ::core::convert::AsRef<MatrixPosition>,
+    T: ::core::borrow::Borrow<MatrixPosition>,
 {
     tetromino_pos
         .all(|pos| {
-            let pos = pos.as_ref();
+            let pos = pos.borrow();
             // Get neighboring position in relevant direction
             let (x, y) = match movement {
                 Move::Y(Y::DownBy1) => (pos.x, pos.y - 1),

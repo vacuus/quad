@@ -1,6 +1,6 @@
 use bevy::ecs::world::Mut;
 use ::core::ops::AddAssign;
-use ::core::convert::AsRef;
+use ::core::borrow::Borrow;
 
 
 pub struct Matrix {
@@ -22,14 +22,8 @@ impl AddAssign<(i16, i16)> for MatrixPosition {
     }
 }
 
-impl AsRef<MatrixPosition> for MatrixPosition {
-    fn as_ref(&self) -> &MatrixPosition {
-        self
-    }
-}
-
-impl AsRef<MatrixPosition> for Mut<'_, MatrixPosition> {
-    fn as_ref(&self) -> &MatrixPosition {
-        &*self
+impl Borrow<MatrixPosition> for &Mut<'_, MatrixPosition> {
+    fn borrow(&self) -> &MatrixPosition {
+        &**self
     }
 }
