@@ -140,6 +140,10 @@ pub fn movement(
     hard_drop.0 = false;
 }
 
+
+use ::core::borrow::Borrow;
+
+
 pub fn can_move<T>(
     mut tetromino_pos: impl Iterator<Item = T>,
     matrix: &Matrix,
@@ -147,11 +151,11 @@ pub fn can_move<T>(
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
-    T: ::core::borrow::Borrow<MatrixPosition>,
+    T: Borrow<MatrixPosition>,
 {
     tetromino_pos
         .all(|pos| {
-            let pos = pos.borrow();
+            let pos = <T as Borrow<MatrixPosition>>::borrow(&pos);
             // Get neighboring position in relevant direction
             let (x, y) = match movement {
                 Move::Y(Y::DownBy1) => (pos.x, pos.y - 1),
