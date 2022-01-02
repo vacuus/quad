@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoType;
-use crate::movement::{Move, can_move};
+use crate::movement::{Move, Rotate, can_move};
 use crate::heap::HeapEntry;
 
 pub fn rotate_tetromino(
@@ -9,8 +9,12 @@ pub fn rotate_tetromino(
     tetromino_type: TetrominoType,
     matrix: &Matrix,
     heap: &Vec<HeapEntry>,
-    clockwise: bool,
+    rotate: Rotate,
 ) {
+    if rotate == Rotate::Neutral {
+        return;
+    }
+
     // Store original positions just in case revert is needed
     let prev_positions = tetromino_pos
         .iter()
@@ -18,7 +22,7 @@ pub fn rotate_tetromino(
         .collect::<Vec<_>>()
     ;
 
-    basic_rotation(tetromino_pos, tetromino_type, &matrix, clockwise);
+    basic_rotation(tetromino_pos, tetromino_type, &matrix, rotate);
 
     // Wall kicks
     if !can_move(&tetromino_pos, &matrix, Move::Neutral, &heap) {
@@ -43,7 +47,7 @@ fn basic_rotation(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     tetromino_type: TetrominoType,
     matrix: &Matrix,
-    clockwise: bool,
+    rotate: Rotate,
 ) {
     use TetrominoType::*;
 
@@ -65,7 +69,7 @@ fn basic_rotation(
         let x = pos.x - center_x;
         let y = pos.y - center_y;
 
-        if clockwise {
+        if rotate == Rotate::Clockwise {
             pos.x = y + center_x;
             pos.y = -x + center_y;
         } else {

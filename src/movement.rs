@@ -115,28 +115,26 @@ pub fn movement(
     });
 
     // Get rotation input
-    let rotate_clockwise = if keyboard_input.just_pressed(KeyCode::X) {
-        Some(true)
+    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
+        Rotate::Clockwise
     } else if keyboard_input.just_pressed(KeyCode::Z) {
-        Some(false)
+        Rotate::Counterclockwise
     } else {
-        None
+        Rotate::Neutral
     };
     // Rotation
-    if let Some(clockwise) = rotate_clockwise {
-        rotate_tetromino(
-            &mut tetromino_pos,
-            *tetromino_type,
-            &matrix,
-            &heap,
-            clockwise,
-        );
-    }
+    rotate_tetromino(
+        &mut tetromino_pos,
+        *tetromino_type,
+        &matrix,
+        &heap,
+        rotate,
+    );
 
     // Reset lock delay if any input
     if move_x != Move::Neutral
         || move_y != Move::Neutral
-        || rotate_clockwise.is_some()
+        || rotate != Rotate::Neutral
     {
         lock_delay_timer.reset();
     }
