@@ -53,14 +53,15 @@ pub fn rotation(
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
             if can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
                 return;
+            } else {
+                tetromino_pos
+                    .iter_mut()
+                    .zip(&prev_positions)
+                    .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+                ;
             }
         }
 
-        tetromino_pos
-            .iter_mut()
-            .zip(prev_positions)
-            .for_each(|(pos, prev_pos)| **pos = prev_pos)
-        ;
     }
 }
 
