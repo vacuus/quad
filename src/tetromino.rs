@@ -22,16 +22,14 @@ impl Tetromino {
         };
     
         let color = match tetromino_type {
-            I => (0.0, 0.7, 0.7),  // cyan
-            O => (0.7, 0.7, 0.0),  // yellow
-            T => (0.7, 0.0, 0.7),  // purple
-            Z => (0.7, 0.0, 0.0),  // red
-            S => (0.0, 0.7, 0.0),  // green
-            L => (0.0, 0.0, 0.9),  // blue
-            J => (0.9, 0.25, 0.0), // orange
+            I => Color::rgb(0.0, 0.7, 0.7),  // cyan
+            O => Color::rgb(0.7, 0.7, 0.0),  // yellow
+            T => Color::rgb(0.7, 0.0, 0.7),  // purple
+            Z => Color::rgb(0.7, 0.0, 0.0),  // red
+            S => Color::rgb(0.0, 0.7, 0.0),  // green
+            L => Color::rgb(0.0, 0.0, 0.9),  // blue
+            J => Color::rgb(0.9, 0.2, 0.0), // orange
         };
-
-        let color = Color::rgb(color.0, color.1, color.2);
 
         let positions = match tetromino_type {
             I => [(1, 3), (1, 2), (1, 1), (1, 0)],

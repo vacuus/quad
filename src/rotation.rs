@@ -47,21 +47,21 @@ pub fn rotation(
 
     // Wall kicks
     if !can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
-        // T spins: (1, -2)
-        let try_moves = [(1, 0), (2, 0), (-1, 0), (-2, 0), (-1, -2)];
+        // relative translations from one kick to the next
+        // (according to the wiki ¯\_(ツ)_/¯) T-spins ~~~~~~vvvvv
+        let try_moves = [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)];
         for try_move in try_moves {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
             if can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
                 return;
-            } else {
-                tetromino_pos
-                    .iter_mut()
-                    .zip(&prev_positions)
-                    .for_each(|(pos, prev_pos)| **pos = *prev_pos)
-                ;
             }
         }
 
+        tetromino_pos
+            .iter_mut()
+            .zip(&prev_positions)
+            .for_each(|(pos, prev_pos)| **pos = *prev_pos)
+        ;
     }
 }
 
