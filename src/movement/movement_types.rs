@@ -55,6 +55,10 @@ impl Move {
     pub fn set_neutral(&mut self) {
         *self = Self::Neutral;
     }
+
+    pub fn is_neutral(&self) -> bool {
+        *self == Self::Neutral
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -75,4 +79,10 @@ pub enum Rotate {
     Clockwise,
     Counterclockwise,
     Neutral,
+}
+
+impl Rotate {
+    pub fn is_neutral(&self) -> bool {
+        *self == Self::Neutral
+    }
 }

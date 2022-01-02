@@ -132,10 +132,7 @@ pub fn movement(
     );
 
     // Reset lock delay if any input
-    if move_x != Move::Neutral
-        || move_y != Move::Neutral
-        || rotate != Rotate::Neutral
-    {
+    if !move_x.is_neutral() || !move_y.is_neutral() || !rotate.is_neutral() {
         lock_delay_timer.reset();
     }
     if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
