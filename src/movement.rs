@@ -32,7 +32,12 @@ pub fn movement(
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        while can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
+        while can_move(
+            tetromino_pos.iter(),
+            &matrix,
+            Move::Y(Y::DownBy1),
+            &heap,
+        ) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
         hard_drop.0 = true;
@@ -77,13 +82,18 @@ pub fn movement(
     }
 
     // Check if movement is legal
-    if !can_move(&tetromino_pos, &matrix, move_x, &heap) {
+    if !can_move(tetromino_pos.iter(), &matrix, move_x, &heap) {
         move_x.set_neutral();
     }
-    if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
+    if !can_move(tetromino_pos.iter(), &matrix, move_y, &heap) {
         move_y.move_up();
         if let Move::Y(Y::DownBy1) = move_y {
-            if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
+            if !can_move(
+                tetromino_pos.iter(),
+                &matrix,
+                Move::Y(Y::DownBy1),
+                &heap,
+            ) {
                 move_y.set_neutral();
             }
         }
@@ -130,15 +140,18 @@ pub fn movement(
     hard_drop.0 = false;
 }
 
-pub fn can_move(
-    tetromino_pos: &Vec<Mut<MatrixPosition>>,
+pub fn can_move<T>(
+    mut tetromino_pos: impl Iterator<Item = T>,
     matrix: &Matrix,
     movement: Move,
     heap: &Vec<HeapEntry>,
-) -> bool {
+) -> bool
+where
+    T: ::core::convert::AsRef<MatrixPosition>,
+{
     tetromino_pos
-        .iter()
         .all(|pos| {
+            let pos = pos.as_ref();
             // Get neighboring position in relevant direction
             let (x, y) = match movement {
                 Move::Y(Y::DownBy1) => (pos.x, pos.y - 1),
@@ -149,6 +162,7 @@ pub fn can_move(
                 // Hard drop isn't a possibility at this point
                 Move::Y(Y::HardDrop) => return true,
             };
+
             // Check if the neighboring position is occupied in the heap
             let maybe_in_heap = || match heap.get(
                 (x + y * matrix.width) as usize

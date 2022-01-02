@@ -26,10 +26,10 @@ pub fn processing(
     mut materials: ResMut<Assets<ColorMaterial>>,
     reset_lock_delay: Res<ResetLockDelay>,
     hard_drop: Res<HardDrop>,
-    mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
+    tetromino: Query<(Entity, &MatrixPosition), With<Tetromino>>,
 ) {
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino
-        .iter_mut()
+        .iter()
         .unzip()
     ;
     let matrix = matrix.single().unwrap();
@@ -37,7 +37,7 @@ pub fn processing(
     if reset_lock_delay.0 {
         lock_delay_timer.reset();
     }
-    if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
+    if !can_move(tetromino_pos.iter(), &matrix, Move::Y(Y::DownBy1), &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
         if !hard_drop.0 && !lock_delay_timer.just_finished() {

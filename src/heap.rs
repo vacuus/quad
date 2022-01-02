@@ -12,7 +12,7 @@ pub fn add_tetromino_to_heap(
     commands: &mut Commands,
     tetromino_ents: &Vec<Entity>,
     heap: &mut Vec<HeapEntry>,
-    tetromino_pos: &Vec<Mut<MatrixPosition>>,
+    tetromino_pos: &Vec<MatrixPosition>,
     matrix: &Matrix,
 ) {
     tetromino_ents
