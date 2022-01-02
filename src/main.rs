@@ -15,6 +15,7 @@ use movement::{
     ResetLockDelay,
     movement,
 };
+use rotation::{RotationSystem, rotation};
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{TetrominoType, spawn_tetromino};
 use heap::HeapEntry;
@@ -36,9 +37,13 @@ fn main() {
         .insert_resource(ResetLockDelay(false))
         .add_startup_system(setup.system())
         .add_system(movement.system().label(MovementSystem))
+        .add_system(rotation.system()
+            .label(RotationSystem)
+            .after(MovementSystem)
+        )
         .add_system(processing.system()
             .label(ProcessingSystem)
-            .after(MovementSystem)
+            .after(RotationSystem)
         )
         .add_system(update_block_sprites.system().after(ProcessingSystem))
         .run()

@@ -2,9 +2,8 @@ mod movement_types;
 
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
-use crate::rotation::rotate_tetromino;
 use crate::heap::HeapEntry;
-use crate::tetromino::{Tetromino, TetrominoType};
+use crate::tetromino::Tetromino;
 pub use movement_types::*;
 
 
@@ -20,7 +19,6 @@ pub fn movement(
     heap: Res<Vec<HeapEntry>>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
-    tetromino_type: Res<TetrominoType>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
     mut hard_drop: ResMut<HardDrop>,
 ) {
@@ -115,28 +113,8 @@ pub fn movement(
         };
     });
 
-    // Get rotation input
-    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
-        Rotate::Clockwise
-    } else if keyboard_input.just_pressed(KeyCode::Z) {
-        Rotate::Counterclockwise
-    } else {
-        Rotate::Neutral
-    };
-    // Rotation
-    rotate_tetromino(
-        &mut tetromino_pos,
-        *tetromino_type,
-        &matrix,
-        &heap,
-        rotate,
-    );
-
     // Reset lock delay if any input
-    reset_lock_delay.0 = !move_x.is_neutral()
-        || !move_y.is_neutral()
-        || !rotate.is_neutral()
-    ;
+    reset_lock_delay.0 = !move_x.is_neutral() || !move_y.is_neutral();
     hard_drop.0 = false;
 }
 

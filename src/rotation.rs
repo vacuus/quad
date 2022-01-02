@@ -1,21 +1,41 @@
-use bevy::ecs::world::Mut;
+use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
-use crate::tetromino::TetrominoType;
-use crate::movement::{Move, Rotate, can_move};
+use crate::tetromino::{Tetromino, TetrominoType};
+use crate::movement::{Move, ResetLockDelay, can_move};
 use crate::heap::HeapEntry;
 
 
-pub fn rotate_tetromino(
-    tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
-    tetromino_type: TetrominoType,
-    matrix: &Matrix,
-    heap: &Vec<HeapEntry>,
-    rotate: Rotate,
-) {
-    if rotate == Rotate::Neutral {
-        return;
-    }
+#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
+pub struct RotationSystem;
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum Rotate {
+    Clockwise,
+    Counterclockwise,
+}
+
+
+pub fn rotation(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
+    tetromino_type: Res<TetrominoType>,
+    matrix: Query<&Matrix>,
+    heap: Res<Vec<HeapEntry>>,
+    mut reset_lock_delay: ResMut<ResetLockDelay>,
+) {
+    // Get rotation input
+    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
+        Rotate::Clockwise
+    } else if keyboard_input.just_pressed(KeyCode::Z) {
+        Rotate::Counterclockwise
+    } else {
+        return;
+    };
+    // Reset lock delay if any input
+    reset_lock_delay.0 = true;
+
+    let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
+    let matrix = matrix.single().unwrap();
     // Store original positions just in case revert is needed
     let prev_positions = tetromino_pos
         .iter()
@@ -23,7 +43,7 @@ pub fn rotate_tetromino(
         .collect::<Vec<_>>()
     ;
 
-    basic_rotation(tetromino_pos, tetromino_type, &matrix, rotate);
+    basic_rotation(&mut tetromino_pos, *tetromino_type, &matrix, rotate);
 
     // Wall kicks
     if !can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {

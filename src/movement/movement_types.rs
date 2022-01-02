@@ -77,16 +77,3 @@ pub enum Y {
     DownBy2,
     HardDrop,
 }
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum Rotate {
-    Clockwise,
-    Counterclockwise,
-    Neutral,
-}
-
-impl Rotate {
-    pub fn is_neutral(&self) -> bool {
-        *self == Self::Neutral
-    }
-}
