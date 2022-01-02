@@ -1,9 +1,6 @@
 use ::core::ops::{Deref, DerefMut};
 use bevy::core::Timer;
-use bevy::ecs::schedule::SystemLabel;
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq, PartialOrd)]
-pub struct MovementSystemLabel;
 
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
