@@ -43,7 +43,7 @@ pub fn rotation(
         .collect::<Vec<_>>()
     ;
 
-    basic_rotation(&mut tetromino_pos, *tetromino_type, &matrix, rotate);
+    basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
 
     // Wall kicks
     if !can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
@@ -68,7 +68,6 @@ pub fn rotation(
 fn basic_rotation(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
     tetromino_type: TetrominoType,
-    matrix: &Matrix,
     rotate: Rotate,
 ) {
     use TetrominoType::*;
@@ -85,8 +84,6 @@ fn basic_rotation(
     let center_x = min_x + rotation_grid_size / 2;
     let center_y = min_y + rotation_grid_size / 2;
 
-    let mut offset = 0;
-
     for pos in &mut *tetromino_pos {
         let x = pos.x - center_x;
         let y = pos.y - center_y;
@@ -98,15 +95,5 @@ fn basic_rotation(
             pos.x = -y + center_x;
             pos.y = x + center_y;
         }
-
-        if pos.x < 0 {
-            offset = offset.max(-pos.x);
-        } else if pos.x >= matrix.width {
-            offset = offset.min(matrix.width - pos.x - 1);
-        }
-    }
-
-    for pos in &mut *tetromino_pos {
-        pos.x += offset;
     }
 }
