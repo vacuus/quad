@@ -3,48 +3,39 @@ mod movement_types;
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::rotation::rotate_tetromino;
-use crate::heap::{HeapEntry, add_tetromino_to_heap};
-use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
+use crate::heap::HeapEntry;
+use crate::tetromino::{Tetromino, TetrominoType};
 pub use movement_types::*;
 
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct MovementSystemLabel;
+pub struct MovementSystem;
 
 
 pub fn movement(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut movement_timer: ResMut<MovementTimer>,
-    mut lock_delay_timer: ResMut<LockDelayTimer>,
-    mut heap: ResMut<Vec<HeapEntry>>,
+    heap: Res<Vec<HeapEntry>>,
     matrix: Query<&Matrix>,
-    mut tetromino: Query<(Entity, &mut MatrixPosition), With<Tetromino>>,
-    mut tetromino_type: ResMut<TetrominoType>,
+    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
+    tetromino_type: Res<TetrominoType>,
+    mut reset_lock_delay: ResMut<ResetLockDelay>,
+    mut hard_drop: ResMut<HardDrop>,
 ) {
     // Each block of the tetromino has, appropriately, the `Tetromino` component
-    let (tetromino_ents, mut tetromino_pos): (Vec<_>, Vec<_>) = tetromino
-        .iter_mut()
-        .unzip()
-    ;
+    let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single().unwrap();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
         || keyboard_input.just_pressed(KeyCode::Up)
     {
-        hard_drop(
-            &mut commands,
-            &matrix,
-            &tetromino_ents,
-            &mut tetromino_pos,
-            &mut heap,
-            &mut materials,
-            &mut tetromino_type,
-        );
+        while can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
+            tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
+        }
+        hard_drop.0 = true;
         return;
     }
 
@@ -92,7 +83,7 @@ pub fn movement(
     if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
         move_y.move_up();
         if let Move::Y(Y::DownBy1) = move_y {
-            if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
+            if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
                 move_y.set_neutral();
             }
         }
@@ -132,60 +123,11 @@ pub fn movement(
     );
 
     // Reset lock delay if any input
-    if !move_x.is_neutral() || !move_y.is_neutral() || !rotate.is_neutral() {
-        lock_delay_timer.reset();
-    }
-    if !can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
-        // If the tetromino can't move down, commence/continue the lock delay
-        lock_delay_timer.tick(time.delta());
-        if !lock_delay_timer.just_finished() {
-            return;
-        }
-        lock_delay_timer.reset();
-        // Revert movement and add tetromino to heap
-        add_tetromino_to_heap(
-            &mut commands,
-            &tetromino_ents,
-            &mut heap,
-            &tetromino_pos,
-            &matrix,
-        );
-        spawn_tetromino(
-            &mut commands,
-            &matrix,
-            &mut materials,
-            &mut tetromino_type,
-        );
-    }
-}
-
-fn hard_drop(
-    mut commands: &mut Commands,
-    matrix: &Matrix,
-    tetromino_ents: &Vec<Entity>,
-    tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
-    mut heap: &mut Vec<HeapEntry>,
-    mut materials: &mut Assets<ColorMaterial>,
-    mut tetromino_type: &mut TetrominoType,
-) {
-    while can_move(&tetromino_pos, &matrix, Move::Y(Y::DownBy1), &heap) {
-        tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
-    }
-
-    // Revert movement and add tetromino to heap
-    add_tetromino_to_heap(
-        &mut commands,
-        &tetromino_ents,
-        &mut heap,
-        &tetromino_pos,
-        &matrix,
-    );
-    spawn_tetromino(
-        &mut commands,
-        &matrix,
-        &mut materials,
-        &mut tetromino_type,
-    );
+    reset_lock_delay.0 = !move_x.is_neutral()
+        || !move_y.is_neutral()
+        || !rotate.is_neutral()
+    ;
+    hard_drop.0 = false;
 }
 
 pub fn can_move(

@@ -3,18 +3,22 @@ mod matrix;
 mod tetromino;
 mod rotation;
 mod heap;
+mod processing;
 
 use bevy::prelude::*;
 use movement::{
-    movement,
-    MovementSystemLabel,
+    MovementSystem,
     GravityTimer,
     MovementTimer,
     LockDelayTimer,
+    HardDrop,
+    ResetLockDelay,
+    movement,
 };
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{TetrominoType, spawn_tetromino};
 use heap::HeapEntry;
+use processing::{ProcessingSystem, processing};
 
 
 const BLOCK_SIZE: f32 = 25.0;
@@ -28,9 +32,15 @@ fn main() {
         .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, false)))
         .insert_resource(Vec::<HeapEntry>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
+        .insert_resource(HardDrop(false))
+        .insert_resource(ResetLockDelay(false))
         .add_startup_system(setup.system())
-        .add_system(movement.system().label(MovementSystemLabel))
-        .add_system(update_block_sprites.system().after(MovementSystemLabel))
+        .add_system(movement.system().label(MovementSystem))
+        .add_system(processing.system()
+            .label(ProcessingSystem)
+            .after(MovementSystem)
+        )
+        .add_system(update_block_sprites.system().after(ProcessingSystem))
         .run()
     ;
 }

@@ -2,6 +2,10 @@ use ::core::ops::{Deref, DerefMut};
 use bevy::core::Timer;
 
 
+pub struct ResetLockDelay(pub bool);
+
+pub struct HardDrop(pub bool);
+
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident) => {
