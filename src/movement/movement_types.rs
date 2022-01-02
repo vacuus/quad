@@ -1,5 +1,5 @@
-use ::core::ops::{Deref, DerefMut};
 use bevy::core::Timer;
+use ::core::ops::{Deref, DerefMut};
 
 
 pub struct ResetLockDelay(pub bool);

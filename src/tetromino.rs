@@ -6,6 +6,7 @@ use rand::{
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::BLOCK_SIZE;
 
+
 // A block can be part of the current tetromino
 #[derive(Debug)]
 pub struct Tetromino;
