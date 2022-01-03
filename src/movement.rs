@@ -106,7 +106,7 @@ pub fn movement(
     });
 
     // Reset lock delay if any input
-    reset_lock_delay.0 = !move_x.is_neutral() || !move_y.is_neutral();
+    reset_lock_delay.0 = !move_x.is_neutral() | !move_y.is_neutral();
     hard_drop.0 = false;
 }
 
@@ -139,7 +139,7 @@ where
 
             // Invalid 'x' or 'y' will still likely produce a valid index into
             // 'heap'; the index is only accurate if 'x' and 'y' are in bounds
-            x >= 0 && x < matrix.width && y >= 0 && match heap.get(
+            (x >= 0) & (x < matrix.width) & (y >= 0) && match heap.get(
                 (x + y * matrix.width) as usize
             ) {
                 Some(HeapEntry::Vacant) => true,
