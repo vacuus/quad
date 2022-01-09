@@ -32,7 +32,7 @@ pub fn processing(
         .iter()
         .unzip()
     ;
-    let matrix = matrix.single().unwrap();
+    let matrix = matrix.single();
 
     if reset_lock_delay.0 {
         lock_delay_timer.reset();
@@ -52,11 +52,6 @@ pub fn processing(
             &tetromino_pos,
             &matrix,
         );
-        spawn_tetromino(
-            &mut commands,
-            &matrix,
-            &mut materials,
-            &mut tetromino_type,
-        );
+        spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
     }
 }

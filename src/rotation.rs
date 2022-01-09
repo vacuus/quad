@@ -35,7 +35,7 @@ pub fn rotation(
     reset_lock_delay.0 = true;
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
-    let matrix = matrix.single().unwrap();
+    let matrix = matrix.single();
     // Store original positions just in case revert is needed
     let prev_positions = tetromino_pos
         .iter()

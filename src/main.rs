@@ -26,7 +26,7 @@ const BLOCK_SIZE: f32 = 25.0;
 
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(GravityTimer(Timer::from_seconds(0.75, false)))
         .insert_resource(MovementTimer(Timer::from_seconds(0.08, false)))
@@ -35,17 +35,11 @@ fn main() {
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .insert_resource(HardDrop(false))
         .insert_resource(ResetLockDelay(false))
-        .add_startup_system(setup.system())
-        .add_system(movement.system().label(MovementSystem))
-        .add_system(rotation.system()
-            .label(RotationSystem)
-            .after(MovementSystem)
-        )
-        .add_system(processing.system()
-            .label(ProcessingSystem)
-            .after(RotationSystem)
-        )
-        .add_system(update_block_sprites.system().after(ProcessingSystem))
+        .add_startup_system(setup)
+        .add_system(movement.label(MovementSystem))
+        .add_system(rotation.label(RotationSystem).after(MovementSystem))
+        .add_system(processing.label(ProcessingSystem).after(RotationSystem))
+        .add_system(update_sprites.after(ProcessingSystem))
         .run()
     ;
 }
@@ -66,31 +60,29 @@ fn setup(
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
 
-    spawn_tetromino(
-        &mut commands,
-        &matrix,
-        &mut materials,
-        &mut tetromino_type,
-    );
+    spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
 
     commands
         .spawn_bundle(SpriteBundle {
-            material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
-            sprite: Sprite::new(Vec2::new(
-                matrix.width as f32 * BLOCK_SIZE,
-                matrix.height as f32 * BLOCK_SIZE,
-            )),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(
+                    matrix.width as f32 * BLOCK_SIZE,
+                    matrix.height as f32 * BLOCK_SIZE,
+                )),
+                color: Color::rgb(0.0, 0.0, 0.0),
+                ..Default::default()
+            },
             ..Default::default()
         })
         .insert(matrix)
     ;
 }
 
-fn update_block_sprites(
+fn update_sprites(
     matrix: Query<&Matrix>,
     mut block: Query<(&MatrixPosition, &mut Transform)>,
 ) {
-    let matrix = matrix.single().unwrap();
+    let matrix = matrix.single();
 
     for (position, mut transform) in block.iter_mut() {
         transform.translation.x = BLOCK_SIZE *

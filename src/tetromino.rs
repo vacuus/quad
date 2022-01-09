@@ -8,7 +8,7 @@ use crate::BLOCK_SIZE;
 
 
 // A block can be part of the current tetromino
-#[derive(Debug)]
+#[derive(Debug, Component)]
 pub struct Tetromino;
 
 impl Tetromino {
@@ -77,7 +77,6 @@ impl Distribution<TetrominoType> for Standard {
 pub fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
-    materials: &mut Assets<ColorMaterial>,
     tetromino_type: &mut TetrominoType,
 ) {
     *tetromino_type = rand::random::<TetrominoType>();
@@ -92,8 +91,11 @@ pub fn spawn_tetromino(
 
         commands
             .spawn_bundle(SpriteBundle {
-                material: materials.add(color.into()),
-                sprite: Sprite::new(Vec2::splat(BLOCK_SIZE)),
+                sprite: Sprite {
+                    custom_size: Some(Vec2::splat(BLOCK_SIZE)),
+                    color,
+                    ..Default::default()
+                },
                 transform: Transform::from_translation(
                     Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 1.0)
                 ),

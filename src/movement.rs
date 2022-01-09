@@ -26,7 +26,7 @@ pub fn movement(
 
     // Each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
-    let matrix = matrix.single().unwrap();
+    let matrix = matrix.single();
 
     // Hard drop
     if keyboard_input.just_pressed(KeyCode::I)
@@ -40,23 +40,23 @@ pub fn movement(
     }
 
     // Get movement input
-    let mut move_x = if keyboard_input.pressed(KeyCode::J)
-        || keyboard_input.pressed(KeyCode::Left)
-    {
-        Move::X(X::Left)
-    } else if keyboard_input.pressed(KeyCode::L)
-        || keyboard_input.pressed(KeyCode::Right)
-    {
-        Move::X(X::Right)
-    } else {
-        Move::Neutral
-    };
-    let mut move_y = if keyboard_input.pressed(KeyCode::K)
-        || keyboard_input.pressed(KeyCode::Down)
-    {
-        Move::Y(Y::DownBy1)
-    } else {
-        Move::Neutral
+    let (mut move_x, mut move_y) = {
+        use KeyCode::{J, K, L, Left, Right, Down};
+
+        let move_x = if keyboard_input.any_pressed([J, Left]) {
+            Move::X(X::Left)
+        } else if keyboard_input.any_pressed([L, Right]) {
+            Move::X(X::Right)
+        } else {
+            Move::Neutral
+        };
+        let move_y = if keyboard_input.any_pressed([K, Down]) {
+            Move::Y(Y::DownBy1)
+        } else {
+            Move::Neutral
+        };
+
+        (move_x, move_y)
     };
 
     // Only allow movement every so often
