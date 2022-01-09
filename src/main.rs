@@ -11,7 +11,7 @@ use movement::{
     GravityTimer,
     MovementTimer,
     LockDelayTimer,
-    HardDrop,
+    HardDropOccurred,
     ResetLockDelay,
     movement,
 };
@@ -33,8 +33,8 @@ fn main() {
         .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, false)))
         .insert_resource(Vec::<HeapEntry>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
-        .insert_resource(HardDrop(false))
-        .insert_resource(ResetLockDelay(false))
+        .insert_resource(HardDropOccurred::new())
+        .insert_resource(ResetLockDelay::new())
         .add_startup_system(setup)
         .add_system(movement.label(MovementSystem))
         .add_system(rotation.label(RotationSystem).after(MovementSystem))

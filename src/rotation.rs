@@ -32,7 +32,7 @@ pub fn rotation(
         return;
     };
     // Reset lock delay if any input
-    reset_lock_delay.0 = true;
+    reset_lock_delay.set_to(true);
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single();

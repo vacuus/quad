@@ -3,7 +3,7 @@ use crate::movement::{
     Move,
     Y,
     LockDelayTimer,
-    HardDrop,
+    HardDropOccurred,
     ResetLockDelay,
     can_move
 };
@@ -24,7 +24,7 @@ pub fn processing(
     matrix: Query<&Matrix>,
     mut heap: ResMut<Vec<HeapEntry>>,
     reset_lock_delay: Res<ResetLockDelay>,
-    hard_drop: Res<HardDrop>,
+    hard_drop: Res<HardDropOccurred>,
     tetromino: Query<(Entity, &MatrixPosition), With<Tetromino>>,
 ) {
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino
@@ -33,13 +33,13 @@ pub fn processing(
     ;
     let matrix = matrix.single();
 
-    if reset_lock_delay.0 {
+    if reset_lock_delay.get() {
         lock_delay_timer.reset();
     }
     if !can_move(tetromino_pos.iter(), &matrix, Move::Y(Y::DownBy1), &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
-        if !hard_drop.0 && !lock_delay_timer.just_finished() {
+        if !hard_drop.get() && !lock_delay_timer.just_finished() {
             return;
         }
         lock_delay_timer.reset();
