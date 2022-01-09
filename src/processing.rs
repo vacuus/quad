@@ -23,7 +23,6 @@ pub fn processing(
     mut tetromino_type: ResMut<TetrominoType>,
     matrix: Query<&Matrix>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     reset_lock_delay: Res<ResetLockDelay>,
     hard_drop: Res<HardDrop>,
     tetromino: Query<(Entity, &MatrixPosition), With<Tetromino>>,

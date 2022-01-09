@@ -94,12 +94,12 @@ pub fn spawn_tetromino(
                 sprite: Sprite {
                     custom_size: Some(Vec2::splat(BLOCK_SIZE)),
                     color,
-                    ..Default::default()
+                    ..<Sprite as Default>::default()
                 },
                 transform: Transform::from_translation(
                     Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 1.0)
                 ),
-                ..Default::default()
+                ..<SpriteBundle as Default>::default()
             })
             .insert(MatrixPosition {
                 x,

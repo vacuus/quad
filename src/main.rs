@@ -46,7 +46,6 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut tetromino_type: ResMut<TetrominoType>,
     mut heap: ResMut<Vec<HeapEntry>>,
 ) {
@@ -58,7 +57,7 @@ fn setup(
     *heap = vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize];
 
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(<UiCameraBundle as Default>::default());
 
     spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
 
@@ -70,9 +69,9 @@ fn setup(
                     matrix.height as f32 * BLOCK_SIZE,
                 )),
                 color: Color::rgb(0.0, 0.0, 0.0),
-                ..Default::default()
+                ..<Sprite as Default>::default()
             },
-            ..Default::default()
+            ..<SpriteBundle as Default>::default()
         })
         .insert(matrix)
     ;
