@@ -62,6 +62,7 @@ pub fn rotation(
             .zip(&prev_positions)
             .for_each(|(pos, prev_pos)| **pos = *prev_pos)
         ;
+        reset_lock_delay.set_to(false);
     }
 }
 
