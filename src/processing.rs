@@ -5,7 +5,7 @@ use crate::movement::{
     LockDelayTimer,
     HardDropOccurred,
     ResetLockDelay,
-    can_move
+    can_move,
 };
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
 use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};

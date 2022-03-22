@@ -9,6 +9,7 @@ pub enum HeapEntry {
     Occupied,
 }
 
+
 pub fn add_tetromino_to_heap(
     commands: &mut Commands,
     matrix: &Matrix,

@@ -38,6 +38,7 @@ macro_rules! timer {
                 &self.0
             }
         }
+
         impl DerefMut for $ty {
             fn deref_mut(&mut self) -> &mut Self::Target {
                 &mut self.0

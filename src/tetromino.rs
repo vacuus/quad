@@ -22,12 +22,12 @@ impl Tetromino {
         };
     
         let color = match tetromino_type {
-            I => Color::rgb(0.0, 0.7, 0.7),  // cyan
-            O => Color::rgb(0.7, 0.7, 0.0),  // yellow
-            T => Color::rgb(0.7, 0.0, 0.7),  // purple
-            Z => Color::rgb(0.7, 0.0, 0.0),  // red
-            S => Color::rgb(0.0, 0.7, 0.0),  // green
-            L => Color::rgb(0.0, 0.0, 0.9),  // blue
+            I => Color::rgb(0.0, 0.7, 0.7), // cyan
+            O => Color::rgb(0.7, 0.7, 0.0), // yellow
+            T => Color::rgb(0.7, 0.0, 0.7), // purple
+            Z => Color::rgb(0.7, 0.0, 0.0), // red
+            S => Color::rgb(0.0, 0.7, 0.0), // green
+            L => Color::rgb(0.0, 0.0, 0.9), // blue
             J => Color::rgb(0.9, 0.2, 0.0), // orange
         };
 
@@ -101,10 +101,7 @@ pub fn spawn_tetromino(
                 ),
                 ..<SpriteBundle as Default>::default()
             })
-            .insert(MatrixPosition {
-                x,
-                y,
-            })
+            .insert(MatrixPosition { x, y })
             .insert(Tetromino)
         ;
     }

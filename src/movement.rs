@@ -29,9 +29,7 @@ pub fn movement(
     let matrix = matrix.single();
 
     // Hard drop
-    if keyboard_input.just_pressed(KeyCode::I)
-        || keyboard_input.just_pressed(KeyCode::Up)
-    {
+    if keyboard_input.any_pressed([KeyCode::I, KeyCode::Up]) {
         while can_move(tetromino_pos.iter(), &matrix, MOVE_DOWN_BY_1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
