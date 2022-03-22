@@ -46,8 +46,8 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    mut tetromino_type: ResMut<TetrominoType>,
     mut heap: ResMut<Vec<HeapEntry>>,
+    mut tetromino_type: ResMut<TetrominoType>,
 ) {
     let matrix = Matrix {
         width: 15,

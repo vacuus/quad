@@ -11,10 +11,10 @@ pub enum HeapEntry {
 
 pub fn add_tetromino_to_heap(
     commands: &mut Commands,
-    tetromino_ents: &Vec<Entity>,
-    heap: &mut Vec<HeapEntry>,
-    tetromino_pos: &Vec<MatrixPosition>,
     matrix: &Matrix,
+    heap: &mut Vec<HeapEntry>,
+    tetromino_ents: &Vec<Entity>,
+    tetromino_pos: &Vec<MatrixPosition>,
 ) {
     tetromino_ents
         .iter()

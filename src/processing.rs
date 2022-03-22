@@ -19,12 +19,12 @@ pub struct ProcessingSystem;
 pub fn processing(
     mut commands: Commands,
     time: Res<Time>,
-    mut lock_delay_timer: ResMut<LockDelayTimer>,
-    mut tetromino_type: ResMut<TetrominoType>,
-    matrix: Query<&Matrix>,
-    mut heap: ResMut<Vec<HeapEntry>>,
-    reset_lock_delay: Res<ResetLockDelay>,
     hard_drop: Res<HardDropOccurred>,
+    reset_lock_delay: Res<ResetLockDelay>,
+    mut heap: ResMut<Vec<HeapEntry>>,
+    mut tetromino_type: ResMut<TetrominoType>,
+    mut lock_delay_timer: ResMut<LockDelayTimer>,
+    matrix: Query<&Matrix>,
     tetromino: Query<(Entity, &MatrixPosition), With<Tetromino>>,
 ) {
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino
@@ -46,10 +46,10 @@ pub fn processing(
         // Revert movement and add tetromino to heap
         add_tetromino_to_heap(
             &mut commands,
-            &tetromino_ents,
-            &mut heap,
-            &tetromino_pos,
             &matrix,
+            &mut heap,
+            &tetromino_ents,
+            &tetromino_pos,
         );
         spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
     }

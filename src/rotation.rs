@@ -16,12 +16,12 @@ pub enum Rotate {
 
 
 pub fn rotation(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
-    tetromino_type: Res<TetrominoType>,
-    matrix: Query<&Matrix>,
     heap: Res<Vec<HeapEntry>>,
+    keyboard_input: Res<Input<KeyCode>>,
+    tetromino_type: Res<TetrominoType>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
+    matrix: Query<&Matrix>,
+    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
     // Get rotation input
     let rotate = if keyboard_input.just_pressed(KeyCode::X) {

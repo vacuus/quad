@@ -12,15 +12,15 @@ pub struct MovementSystem;
 
 
 pub fn movement(
-    keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
+    heap: Res<Vec<HeapEntry>>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut hard_drop: ResMut<HardDropOccurred>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut movement_timer: ResMut<MovementTimer>,
-    heap: Res<Vec<HeapEntry>>,
+    mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
-    mut reset_lock_delay: ResMut<ResetLockDelay>,
-    mut hard_drop: ResMut<HardDropOccurred>,
 ) {
     const MOVE_DOWN_BY_1: Move = Move::Y(Y::DownBy1);
 
