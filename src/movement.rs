@@ -131,8 +131,6 @@ where
                 Move::X(X::Left) => (pos.x - 1, pos.y),
                 Move::X(X::Right) => (pos.x + 1, pos.y),
                 Move::Neutral => (pos.x, pos.y),
-                // Hard drop isn't a possibility at this point
-                Move::Y(Y::HardDrop) => return true,
             };
 
             // Invalid 'x' or 'y' will still likely produce a valid index into

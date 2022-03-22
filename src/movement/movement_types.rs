@@ -96,5 +96,4 @@ pub enum X {
 pub enum Y {
     DownBy1,
     DownBy2,
-    HardDrop,
 }
