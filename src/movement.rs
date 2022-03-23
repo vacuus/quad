@@ -22,15 +22,13 @@ pub fn movement(
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
-    const MOVE_DOWN_BY_1: MoveY = MoveY::Down1;
-
     // Each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single();
 
     // Hard drop
     if keyboard_input.any_just_pressed([KeyCode::I, KeyCode::Up]) {
-        while can_move(tetromino_pos.iter(), &matrix, MOVE_DOWN_BY_1, &heap) {
+        while can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
         hard_drop_occurred.set();
@@ -80,8 +78,8 @@ pub fn movement(
     }
     if !can_move(tetromino_pos.iter(), &matrix, move_y, &heap) {
         move_y.move_up();
-        if let MoveY::Down1 = move_y {
-            if !can_move(tetromino_pos.iter(), &matrix, MOVE_DOWN_BY_1, &heap) {
+        if move_y == MoveY::Down1 {
+            if !can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
                 move_y.set_neutral();
             }
         }
