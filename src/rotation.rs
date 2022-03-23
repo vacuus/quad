@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::{Tetromino, TetrominoType};
-use crate::movement::{Move, ResetLockDelay, can_move};
+use crate::movement::{MoveNeutral, ResetLockDelay, can_move};
 use crate::heap::HeapEntry;
 
 
@@ -46,13 +46,13 @@ pub fn rotation(
     basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
 
     // Wall kicks
-    if !can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
+    if !can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
         // relative translations from one kick to the next
         // (according to the wiki ¯\_(ツ)_/¯) T-spins ~~~~~~vvvvv
         let try_moves = [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)];
         for try_move in try_moves {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
-            if can_move(tetromino_pos.iter(), &matrix, Move::Neutral, &heap) {
+            if can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
                 return;
             }
         }

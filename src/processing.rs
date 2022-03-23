@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use crate::movement::{
-    Move,
-    Y,
+    MoveY,
     LockDelayTimer,
     HardDropOccurred,
     ResetLockDelay,
@@ -36,7 +35,7 @@ pub fn processing(
     if reset_lock_delay.get() {
         lock_delay_timer.reset();
     }
-    if !can_move(tetromino_pos.iter(), &matrix, Move::Y(Y::Down1), &heap) {
+    if !can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
         if !hard_drop_occurred.get() && !lock_delay_timer.just_finished() {

@@ -64,27 +64,47 @@ timer!(MovementTimer);
 timer!(LockDelayTimer);
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum Move {
-    X(X),
-    Y(Y),
+pub struct MoveNeutral;
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum MoveX {
+    Left,
+    Right,
     Neutral,
 }
 
-impl Move {
+impl MoveX {
+    pub fn set_neutral(&mut self) {
+        *self = Self::Neutral;
+    }
+
+    pub fn is_neutral(&self) -> bool {
+        *self == Self::Neutral
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum MoveY {
+    Down1,
+    Down2,
+    Neutral,
+}
+
+impl MoveY {
     pub fn move_down(&mut self) {
         *self = match self {
-            Self::Neutral => Self::Y(Y::Down1),
+            Self::Neutral => Self::Down1,
             // Though unlikely, the user and the soft drop could
             // each decrement 'move_y' on the same frame
-            Self::Y(Y::Down1) => Self::Y(Y::Down2),
+            Self::Down1 => Self::Down2,
             _ => *self,
         }
     }
 
     pub fn move_up(&mut self) {
         *self = match self {
-            Self::Y(Y::Down1) => Self::Neutral,
-            Self::Y(Y::Down2) => Self::Y(Y::Down1),
+            Self::Down1 => Self::Neutral,
+            Self::Down2 => Self::Down1,
             _ => *self,
         }
     }
@@ -96,16 +116,4 @@ impl Move {
     pub fn is_neutral(&self) -> bool {
         *self == Self::Neutral
     }
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum X {
-    Left,
-    Right,
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub enum Y {
-    Down1,
-    Down2,
 }

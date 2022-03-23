@@ -22,7 +22,7 @@ pub fn movement(
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
-    const MOVE_DOWN_BY_1: Move = Move::Y(Y::Down1);
+    const MOVE_DOWN_BY_1: MoveY = MoveY::Down1;
 
     // Each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
@@ -42,16 +42,16 @@ pub fn movement(
         use KeyCode::{J, K, L, Left, Right, Down};
 
         let move_x = if keyboard_input.any_pressed([J, Left]) {
-            Move::X(X::Left)
+            MoveX::Left
         } else if keyboard_input.any_pressed([L, Right]) {
-            Move::X(X::Right)
+            MoveX::Right
         } else {
-            Move::Neutral
+            MoveX::Neutral
         };
         let move_y = if keyboard_input.any_pressed([K, Down]) {
-            Move::Y(Y::Down1)
+            MoveY::Down1
         } else {
-            Move::Neutral
+            MoveY::Neutral
         };
 
         (move_x, move_y)
@@ -80,7 +80,7 @@ pub fn movement(
     }
     if !can_move(tetromino_pos.iter(), &matrix, move_y, &heap) {
         move_y.move_up();
-        if let Move::Y(Y::Down1) = move_y {
+        if let MoveY::Down1 = move_y {
             if !can_move(tetromino_pos.iter(), &matrix, MOVE_DOWN_BY_1, &heap) {
                 move_y.set_neutral();
             }
@@ -90,15 +90,15 @@ pub fn movement(
     // Apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
         pos.x += match move_x {
-            Move::Neutral => 0,
-            Move::X(X::Left) => -1,
-            Move::X(X::Right) => 1,
+            MoveX::Neutral => 0,
+            MoveX::Left => -1,
+            MoveX::Right => 1,
             _ => unreachable!(),
         };
         pos.y += match move_y {
-            Move::Neutral => 0,
-            Move::Y(Y::Down1) => -1,
-            Move::Y(Y::Down2) => -2,
+            MoveY::Neutral => 0,
+            MoveY::Down1 => -1,
+            MoveY::Down2 => -2,
             _ => unreachable!(),
         };
     });
@@ -126,10 +126,10 @@ where
             let pos = <T as Borrow<MatrixPosition>>::borrow(&pos);
             // Get neighboring position in relevant direction
             let (x, y) = match movement {
-                Move::Y(Y::Down1) => (pos.x, pos.y - 1),
-                Move::Y(Y::Down2) => (pos.x, pos.y - 2),
-                Move::X(X::Left) => (pos.x - 1, pos.y),
-                Move::X(X::Right) => (pos.x + 1, pos.y),
+                MoveY::Down1 => (pos.x, pos.y - 1),
+                MoveY::Down2 => (pos.x, pos.y - 2),
+                MoveX::Left => (pos.x - 1, pos.y),
+                MoveX::Right => (pos.x + 1, pos.y),
                 Move::Neutral => (pos.x, pos.y),
             };
 
