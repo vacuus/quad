@@ -22,6 +22,7 @@ use heap::HeapEntry;
 use processing::{ProcessingSystem, processing};
 
 
+// pixel (?) width of a block
 const BLOCK_SIZE: f32 = 25.0;
 
 
@@ -57,7 +58,7 @@ fn setup(
     *heap = vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize];
 
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(<UiCameraBundle as Default>::default());
+    commands.spawn_bundle(UiCameraBundle::default());
 
     spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
 
@@ -69,9 +70,9 @@ fn setup(
                     matrix.height as f32 * BLOCK_SIZE,
                 )),
                 color: Color::rgb(0.0, 0.0, 0.0),
-                ..<Sprite as Default>::default()
+                ..Sprite::default()
             },
-            ..<SpriteBundle as Default>::default()
+            ..SpriteBundle::default()
         })
         .insert(matrix)
     ;

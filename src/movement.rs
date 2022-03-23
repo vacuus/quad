@@ -22,11 +22,11 @@ pub fn movement(
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
-    // Each block of the tetromino has, appropriately, the `Tetromino` component
+    // each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single();
 
-    // Hard drop
+    // hard drop
     if keyboard_input.any_just_pressed([KeyCode::I, KeyCode::Up]) {
         while can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
@@ -35,7 +35,7 @@ pub fn movement(
         return;
     }
 
-    // Get movement input
+    // get movement input
     let (mut move_x, mut move_y) = {
         use KeyCode::{J, K, L, Left, Right, Down};
 
@@ -55,24 +55,24 @@ pub fn movement(
         (move_x, move_y)
     };
 
-    // Only allow movement every so often
+    // only allow movement every so often
     movement_timer.tick(time.delta());
     if movement_timer.just_finished() {
         movement_timer.reset();
     } else {
-        // Ignore movement input, but gravity can still take effect
+        // ignore movement input, but gravity can still take effect
         move_x.set_neutral();
         move_y.set_neutral();
     }
 
-    // Gravity
+    // gravity
     gravity_timer.tick(time.delta());
     if gravity_timer.just_finished() {
         move_y.move_down();
         gravity_timer.reset();
     }
 
-    // Check if movement is legal
+    // check if movement is legal
     if !can_move(tetromino_pos.iter(), &matrix, move_x, &heap) {
         move_x.set_neutral();
     }
@@ -85,12 +85,12 @@ pub fn movement(
         }
     }
 
-    // Apply movement
+    // apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
-        **pos += <(MoveX, MoveY) as MoveOffset>::to_offset(&(move_x, move_y));
+        **pos += (move_x, move_y).to_offset();
     });
 
-    // Reset lock delay if any input
+    // reset lock delay if any input
     reset_lock_delay.set_to(!move_x.is_neutral() | !move_y.is_neutral());
     hard_drop_occurred.reset();
 }
@@ -112,11 +112,11 @@ where
     tetromino_pos
         .all(|pos| {
             let mut pos = *<T as Borrow<MatrixPosition>>::borrow(&pos);
-            // Get neighboring position in relevant direction
+            // get neighboring position in relevant direction
             pos += <M as MoveOffset>::to_offset(&movement);
             let (x, y) = (pos.x, pos.y);
 
-            // Invalid 'x' or 'y' will still likely produce a valid index into
+            // invalid 'x' or 'y' will still likely produce a valid index into
             // 'heap'; the index is only accurate if 'x' and 'y' are in bounds
             (x >= 0) & (x < matrix.width) & (y >= 0) && match heap.get(
                 (x + y * matrix.width) as usize

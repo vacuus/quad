@@ -170,8 +170,8 @@ impl MoveOffset for (MoveX, MoveY) {
     }
 
     fn to_offset(&self) -> (i16, i16) {
-        let x_offset = <MoveX as MoveOffset>::to_offset(&self.0).0;
-        let y_offset = <MoveY as MoveOffset>::to_offset(&self.1).1;
+        let x_offset = self.0.to_offset().0;
+        let y_offset = self.1.to_offset().1;
         (x_offset, y_offset)
     }
 }

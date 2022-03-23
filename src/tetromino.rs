@@ -31,7 +31,7 @@ impl Tetromino {
             J => Color::rgb(0.9, 0.2, 0.0), // orange
         };
 
-        let positions = match tetromino_type {
+        let rel_start_positions = match tetromino_type {
             I => [(1, 3), (1, 2), (1, 1), (1, 0)],
             O => [(1, 1), (1, 2), (2, 1), (2, 2)],
             T => [(0, 1), (1, 1), (2, 1), (1, 2)],
@@ -41,7 +41,7 @@ impl Tetromino {
             J => [(0, 1), (1, 1), (2, 1), (2, 2)],
         };
 
-        (matrix_size, color, positions)
+        (matrix_size, color, rel_start_positions)
     }
 }
 
@@ -56,7 +56,7 @@ pub enum TetrominoType {
     J,
 }
 
-// Used in pseudorandom generation of tetromino type during spawning
+// used in pseudorandom generation of tetromino type during spawning
 impl Distribution<TetrominoType> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
         use self::TetrominoType::*;
@@ -94,12 +94,12 @@ pub fn spawn_tetromino(
                 sprite: Sprite {
                     custom_size: Some(Vec2::splat(BLOCK_SIZE)),
                     color,
-                    ..<Sprite as Default>::default()
+                    ..Sprite::default()
                 },
                 transform: Transform::from_translation(
                     Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 1.0)
                 ),
-                ..<SpriteBundle as Default>::default()
+                ..SpriteBundle::default()
             })
             .insert(MatrixPosition { x, y })
             .insert(Tetromino)

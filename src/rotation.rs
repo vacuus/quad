@@ -23,7 +23,7 @@ pub fn rotation(
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
-    // Get rotation input
+    // get rotation input
     let rotate = if keyboard_input.just_pressed(KeyCode::X) {
         Rotate::Clockwise
     } else if keyboard_input.just_pressed(KeyCode::Z) {
@@ -31,12 +31,12 @@ pub fn rotation(
     } else {
         return;
     };
-    // Reset lock delay if any input
+    // reset lock delay if any input
     reset_lock_delay.set_to(true);
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single();
-    // Store original positions just in case revert is needed
+    // store original positions just in case rotation needs to be reverted
     let prev_positions = tetromino_pos
         .iter()
         .map(|pos| **pos)
@@ -45,10 +45,10 @@ pub fn rotation(
 
     basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
 
-    // Wall kicks
+    // wall kicks
     if !can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
         // relative translations from one kick to the next
-        // (according to the wiki ¯\_(ツ)_/¯) T-spins ~~~~~~vvvvv
+        // (according to the wiki ¯\_(ツ)_/¯) T-spins ──────┬───┬
         let try_moves = [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)];
         for try_move in try_moves {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
@@ -57,6 +57,7 @@ pub fn rotation(
             }
         }
 
+        // revert rotation
         tetromino_pos
             .iter_mut()
             .zip(&prev_positions)
