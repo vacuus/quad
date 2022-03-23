@@ -3,6 +3,7 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::{Tetromino, TetrominoType};
 use crate::movement::{MoveNeutral, ResetLockDelay, can_move};
 use crate::heap::HeapEntry;
+use crate::kb_input::{KeyAction, KeyActions};
 
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
@@ -17,16 +18,17 @@ pub enum Rotate {
 
 pub fn rotation(
     heap: Res<Vec<HeapEntry>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<KeyActions>,
     tetromino_type: Res<TetrominoType>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
     // get rotation input
-    let rotate = if keyboard_input.just_pressed(KeyCode::X) {
+    let rotate = if keyboard_input.get_action(KeyAction::ClockwiseJustPressed) {
         Rotate::Clockwise
-    } else if keyboard_input.just_pressed(KeyCode::Z) {
+    } else if keyboard_input.get_action(KeyAction::CounterclockwiseJustPressed)
+    {
         Rotate::Counterclockwise
     } else {
         return;

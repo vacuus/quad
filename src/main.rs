@@ -4,6 +4,7 @@ mod tetromino;
 mod rotation;
 mod heap;
 mod processing;
+mod kb_input;
 
 use bevy::prelude::*;
 use movement::{
@@ -20,6 +21,7 @@ use matrix::{Matrix, MatrixPosition};
 use tetromino::{TetrominoType, spawn_tetromino};
 use heap::HeapEntry;
 use processing::{ProcessingSystem, processing};
+use kb_input::{KeyboardInputSystem, KeyActions, keyboard_input};
 
 
 // pixel (?) width of a block
@@ -36,8 +38,10 @@ fn main() {
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .insert_resource(HardDropOccurred::new())
         .insert_resource(ResetLockDelay::new())
+        .insert_resource(KeyActions::new())
         .add_startup_system(setup)
-        .add_system(movement.label(MovementSystem))
+        .add_system(keyboard_input.label(KeyboardInputSystem))
+        .add_system(movement.label(MovementSystem).after(KeyboardInputSystem))
         .add_system(rotation.label(RotationSystem).after(MovementSystem))
         .add_system(processing.label(ProcessingSystem).after(RotationSystem))
         .add_system(update_sprites.after(ProcessingSystem))

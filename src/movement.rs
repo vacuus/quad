@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::heap::HeapEntry;
 use crate::tetromino::Tetromino;
+use crate::kb_input::{KeyAction, KeyActions};
 pub use movement_types::*;
 
 
@@ -14,7 +15,7 @@ pub struct MovementSystem;
 pub fn movement(
     time: Res<Time>,
     heap: Res<Vec<HeapEntry>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<KeyActions>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut movement_timer: ResMut<MovementTimer>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
@@ -27,7 +28,7 @@ pub fn movement(
     let matrix = matrix.single();
 
     // hard drop
-    if keyboard_input.any_just_pressed([KeyCode::I, KeyCode::Up]) {
+    if keyboard_input.get_action(KeyAction::HardDropJustPressed) {
         while can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
@@ -37,16 +38,14 @@ pub fn movement(
 
     // get movement input
     let (mut move_x, mut move_y) = {
-        use KeyCode::{J, K, L, Left, Right, Down};
-
-        let move_x = if keyboard_input.any_pressed([J, Left]) {
+        let move_x = if keyboard_input.get_action(KeyAction::LeftPressed) {
             MoveX::Left
-        } else if keyboard_input.any_pressed([L, Right]) {
+        } else if keyboard_input.get_action(KeyAction::RightPressed) {
             MoveX::Right
         } else {
             MoveX::Neutral
         };
-        let move_y = if keyboard_input.any_pressed([K, Down]) {
+        let move_y = if keyboard_input.get_action(KeyAction::DownPressed) {
             MoveY::Down1
         } else {
             MoveY::Neutral
