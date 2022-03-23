@@ -19,8 +19,8 @@ pub struct ProcessingSystem;
 pub fn processing(
     mut commands: Commands,
     time: Res<Time>,
-    hard_drop: Res<HardDropOccurred>,
     reset_lock_delay: Res<ResetLockDelay>,
+    hard_drop_occurred: Res<HardDropOccurred>,
     mut heap: ResMut<Vec<HeapEntry>>,
     mut tetromino_type: ResMut<TetrominoType>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
@@ -39,10 +39,11 @@ pub fn processing(
     if !can_move(tetromino_pos.iter(), &matrix, Move::Y(Y::DownBy1), &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
-        if !hard_drop.get() && !lock_delay_timer.just_finished() {
+        if !hard_drop_occurred.get() && !lock_delay_timer.just_finished() {
             return;
         }
         lock_delay_timer.reset();
+
         // Revert movement and add tetromino to heap
         add_tetromino_to_heap(
             &mut commands,

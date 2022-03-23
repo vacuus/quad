@@ -2,29 +2,41 @@ use bevy::core::Timer;
 use ::core::ops::{Deref, DerefMut};
 
 
-// Newtype wrapper for certain state
-macro_rules! make_state {
-    ($ty:ident) => {
-        pub struct $ty(bool);
+pub struct ResetLockDelay(bool);
 
-        impl $ty {
-            pub fn new() -> Self {
-                Self(false)
-            }
+impl ResetLockDelay {
+    pub fn new() -> Self {
+        Self(false)
+    }
 
-            pub fn set_to(&mut self, state: bool) {
-                self.0 = state;
-            }
+    pub fn set_to(&mut self, state: bool) {
+        self.0 = state;
+    }
 
-            pub fn get(&self) -> bool {
-                self.0
-            }
-        }
+    pub fn get(&self) -> bool {
+        self.0
     }
 }
 
-make_state!(ResetLockDelay);
-make_state!(HardDropOccurred);
+pub struct HardDropOccurred(bool);
+
+impl HardDropOccurred {
+    pub fn new() -> Self {
+        Self(false)
+    }
+
+    pub fn set(&mut self) {
+        self.0 = true;
+    }
+
+    pub fn reset(&mut self) {
+        self.0 = false;
+    }
+
+    pub fn get(&self) -> bool {
+        self.0
+    }
+}
 
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
