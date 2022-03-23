@@ -73,18 +73,18 @@ pub enum Move {
 impl Move {
     pub fn move_down(&mut self) {
         *self = match self {
-            Self::Neutral => Self::Y(Y::DownBy1),
+            Self::Neutral => Self::Y(Y::Down1),
             // Though unlikely, the user and the soft drop could
             // each decrement 'move_y' on the same frame
-            Self::Y(Y::DownBy1) => Self::Y(Y::DownBy2),
+            Self::Y(Y::Down1) => Self::Y(Y::Down2),
             _ => *self,
         }
     }
 
     pub fn move_up(&mut self) {
         *self = match self {
-            Self::Y(Y::DownBy1) => Self::Neutral,
-            Self::Y(Y::DownBy2) => Self::Y(Y::DownBy1),
+            Self::Y(Y::Down1) => Self::Neutral,
+            Self::Y(Y::Down2) => Self::Y(Y::Down1),
             _ => *self,
         }
     }
@@ -106,6 +106,6 @@ pub enum X {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Y {
-    DownBy1,
-    DownBy2,
+    Down1,
+    Down2,
 }
