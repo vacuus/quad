@@ -89,18 +89,7 @@ pub fn movement(
 
     // Apply movement
     tetromino_pos.iter_mut().for_each(|pos| {
-        pos.x += match move_x {
-            MoveX::Neutral => 0,
-            MoveX::Left => -1,
-            MoveX::Right => 1,
-            _ => unreachable!(),
-        };
-        pos.y += match move_y {
-            MoveY::Neutral => 0,
-            MoveY::Down1 => -1,
-            MoveY::Down2 => -2,
-            _ => unreachable!(),
-        };
+        **pos += <(MoveX, MoveY) as MoveOffset>::to_offset(&(move_x, move_y));
     });
 
     // Reset lock delay if any input
@@ -112,26 +101,22 @@ pub fn movement(
 use ::core::borrow::Borrow;
 
 
-pub fn can_move<T>(
+pub fn can_move<T, M>(
     mut tetromino_pos: impl Iterator<Item = T>,
     matrix: &Matrix,
-    movement: impl MoveOffset,
+    movement: M,
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
     T: Borrow<MatrixPosition>,
+    M: MoveOffset,
 {
     tetromino_pos
         .all(|pos| {
-            let pos = <T as Borrow<MatrixPosition>>::borrow(&pos);
+            let mut pos = *<T as Borrow<MatrixPosition>>::borrow(&pos);
             // Get neighboring position in relevant direction
-            let (x, y) = match movement {
-                MoveY::Down1 => (pos.x, pos.y - 1),
-                MoveY::Down2 => (pos.x, pos.y - 2),
-                MoveX::Left => (pos.x - 1, pos.y),
-                MoveX::Right => (pos.x + 1, pos.y),
-                MoveNeutral => (pos.x, pos.y),
-            };
+            pos += <M as MoveOffset>::to_offset(&movement);
+            let (x, y) = (pos.x, pos.y);
 
             // Invalid 'x' or 'y' will still likely produce a valid index into
             // 'heap'; the index is only accurate if 'x' and 'y' are in bounds

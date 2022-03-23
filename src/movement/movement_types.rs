@@ -67,6 +67,8 @@ pub trait MoveOffset {
     fn set_neutral(&mut self);
 
     fn is_neutral(&self) -> bool;
+
+    fn to_offset(&self) -> (i16, i16);
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -79,6 +81,10 @@ impl MoveOffset for MoveNeutral {
 
     fn is_neutral(&self) -> bool {
         true
+    }
+
+    fn to_offset(&self) -> (i16, i16) {
+        (0, 0)
     }
 }
 
@@ -96,6 +102,14 @@ impl MoveOffset for MoveX {
 
     fn is_neutral(&self) -> bool {
         *self == Self::Neutral
+    }
+
+    fn to_offset(&self) -> (i16, i16) {
+        match *self {
+            Self::Neutral => (0, 0),
+            Self::Left => (-1, 0),
+            Self::Right => (1, 0),
+        }
     }
 }
 
@@ -133,5 +147,31 @@ impl MoveOffset for MoveY {
 
     fn is_neutral(&self) -> bool {
         *self == Self::Neutral
+    }
+
+    fn to_offset(&self) -> (i16, i16) {
+        match *self {
+            Self::Neutral => (0, 0),
+            Self::Down1 => (0, -1),
+            Self::Down2 => (0, -2),
+        }
+    }
+}
+
+impl MoveOffset for (MoveX, MoveY) {
+    // should never be called
+    fn set_neutral(&mut self) {
+        unreachable!()
+    }
+
+    // should never be called
+    fn is_neutral(&self) -> bool {
+        unreachable!()
+    }
+
+    fn to_offset(&self) -> (i16, i16) {
+        let x_offset = <MoveX as MoveOffset>::to_offset(&self.0).0;
+        let y_offset = <MoveY as MoveOffset>::to_offset(&self.1).1;
+        (x_offset, y_offset)
     }
 }
