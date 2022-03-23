@@ -115,7 +115,7 @@ use ::core::borrow::Borrow;
 pub fn can_move<T>(
     mut tetromino_pos: impl Iterator<Item = T>,
     matrix: &Matrix,
-    movement: Move,
+    movement: impl MoveOffset,
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
@@ -130,7 +130,7 @@ where
                 MoveY::Down2 => (pos.x, pos.y - 2),
                 MoveX::Left => (pos.x - 1, pos.y),
                 MoveX::Right => (pos.x + 1, pos.y),
-                Move::Neutral => (pos.x, pos.y),
+                MoveNeutral => (pos.x, pos.y),
             };
 
             // Invalid 'x' or 'y' will still likely produce a valid index into

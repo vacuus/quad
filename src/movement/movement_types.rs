@@ -63,8 +63,24 @@ timer!(GravityTimer);
 timer!(MovementTimer);
 timer!(LockDelayTimer);
 
+pub trait MoveOffset {
+    fn set_neutral(&mut self);
+
+    fn is_neutral(&self) -> bool;
+}
+
 #[derive(Copy, Clone, PartialEq)]
 pub struct MoveNeutral;
+
+impl MoveOffset for MoveNeutral {
+    fn set_neutral(&mut self) {
+        *self = Self;
+    }
+
+    fn is_neutral(&self) -> bool {
+        true
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum MoveX {
@@ -73,12 +89,12 @@ pub enum MoveX {
     Neutral,
 }
 
-impl MoveX {
-    pub fn set_neutral(&mut self) {
+impl MoveOffset for MoveX {
+    fn set_neutral(&mut self) {
         *self = Self::Neutral;
     }
 
-    pub fn is_neutral(&self) -> bool {
+    fn is_neutral(&self) -> bool {
         *self == Self::Neutral
     }
 }
@@ -108,12 +124,14 @@ impl MoveY {
             _ => *self,
         }
     }
+}
 
-    pub fn set_neutral(&mut self) {
+impl MoveOffset for MoveY {
+    fn set_neutral(&mut self) {
         *self = Self::Neutral;
     }
 
-    pub fn is_neutral(&self) -> bool {
+    fn is_neutral(&self) -> bool {
         *self == Self::Neutral
     }
 }
