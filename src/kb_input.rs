@@ -26,7 +26,7 @@ impl KeyActions {
         Self { bitflags: 0 }
     }
 
-    fn set_action(&mut self, key_action: KeyAction, state: ElementState) {
+    fn set_action_state(&mut self, key_action: KeyAction, state: ElementState) {
         self.bitflags = match state {
             // set the bit at the appropriate location
             ElementState::Pressed  => self.bitflags |   1 << key_action as u16,
@@ -35,7 +35,7 @@ impl KeyActions {
         }
     }
 
-    pub fn get_action(&self, key_action: KeyAction) -> bool {
+    pub fn get_action_state(&self, key_action: KeyAction) -> bool {
         let set = (self.bitflags >> key_action as u16) & 1;
         set != 0
     }
@@ -48,9 +48,9 @@ pub fn keyboard_input(
 ) {
     use self::KeyAction::*;
 
-    let prev_hrddrp_pressed = key_actions.get_action(HardDropPressed);
-    let prev_clkw_pressed = key_actions.get_action(ClkwPressed);
-    let prev_cclw_pressed = key_actions.get_action(CclwPressed);
+    let prev_hrddrp_pressed = key_actions.get_action_state(HardDropPressed);
+    let prev_clkw_pressed = key_actions.get_action_state(ClkwPressed);
+    let prev_cclw_pressed = key_actions.get_action_state(CclwPressed);
 
     for (state, key_code) in key_events
         .iter()
@@ -61,22 +61,22 @@ pub fn keyboard_input(
         use KeyCode::{W, A, S, D, I, J, K, L, X, Z, Up, Left, Right, Down};
 
         match key_code {
-            W | I | Up    => key_actions.set_action(HardDropPressed, state),
-            A | J | Left  => key_actions.set_action(LeftPressed, state),
-            S | K | Down  => key_actions.set_action(DownPressed, state),
-            D | L | Right => key_actions.set_action(RightPressed, state),
-            Z         => key_actions.set_action(CclwPressed, state),
-            X         => key_actions.set_action(ClkwPressed, state),
-            _         => {},
+            W | I | Up => key_actions.set_action_state(HardDropPressed, state),
+            A | J | Left  => key_actions.set_action_state(LeftPressed, state),
+            S | K | Down  => key_actions.set_action_state(DownPressed, state),
+            D | L | Right => key_actions.set_action_state(RightPressed, state),
+            Z             => key_actions.set_action_state(CclwPressed, state),
+            X             => key_actions.set_action_state(ClkwPressed, state),
+            _             => {},
         }
     }
 
     let mut set_just_pressed = |cond: bool, pressed, just_pressed| if !cond &&
-        key_actions.get_action(pressed)
+        key_actions.get_action_state(pressed)
     {
-        key_actions.set_action(just_pressed, ElementState::Pressed);
+        key_actions.set_action_state(just_pressed, ElementState::Pressed);
     } else {
-        key_actions.set_action(just_pressed, ElementState::Released);
+        key_actions.set_action_state(just_pressed, ElementState::Released);
     };
 
     set_just_pressed(prev_hrddrp_pressed, HardDropPressed, HardDropJustPressed);

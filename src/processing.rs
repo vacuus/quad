@@ -31,16 +31,16 @@ pub fn processing(
         lock_delay_timer.reset();
     }
     if !can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
-        // If the tetromino can't move down, commence/continue the lock delay
+        // if the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
-        if !keyboard_input.get_action(KeyAction::HardDropJustPressed)
+        if !keyboard_input.get_action_state(KeyAction::HardDropJustPressed)
             && !lock_delay_timer.just_finished()
         {
             return;
         }
         lock_delay_timer.reset();
 
-        // Revert movement and add tetromino to heap
+        // revert movement and add tetromino to heap
         add_tetromino_to_heap(
             &mut commands,
             &matrix,

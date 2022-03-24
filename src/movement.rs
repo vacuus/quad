@@ -27,7 +27,7 @@ pub fn movement(
     let matrix = matrix.single();
 
     // hard drop
-    if keyboard_input.get_action(KeyAction::HardDropJustPressed) {
+    if keyboard_input.get_action_state(KeyAction::HardDropJustPressed) {
         while can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
@@ -36,14 +36,16 @@ pub fn movement(
 
     // get movement input
     let (mut move_x, mut move_y) = {
-        let move_x = if keyboard_input.get_action(KeyAction::LeftPressed) {
+        let move_x = if keyboard_input.get_action_state(KeyAction::LeftPressed)
+        {
             MoveX::Left
-        } else if keyboard_input.get_action(KeyAction::RightPressed) {
+        } else if keyboard_input.get_action_state(KeyAction::RightPressed) {
             MoveX::Right
         } else {
             MoveX::Neutral
         };
-        let move_y = if keyboard_input.get_action(KeyAction::DownPressed) {
+        let move_y = if keyboard_input.get_action_state(KeyAction::DownPressed)
+        {
             MoveY::Down1
         } else {
             MoveY::Neutral
