@@ -33,8 +33,6 @@ pub fn rotation(
     } else {
         return;
     };
-    // reset lock delay if any input
-    reset_lock_delay.set_to(true);
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
     let matrix = matrix.single();
@@ -47,6 +45,8 @@ pub fn rotation(
 
     basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
 
+    let mut reverted_rotation = false;
+
     // wall kicks
     if !can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
         // relative translations from one kick to the next
@@ -55,6 +55,8 @@ pub fn rotation(
         for try_move in try_moves {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
             if can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
+                // successful rotation, so reset lock delay
+                reset_lock_delay.set_to(true);
                 return;
             }
         }
@@ -65,8 +67,12 @@ pub fn rotation(
             .zip(&prev_positions)
             .for_each(|(pos, prev_pos)| **pos = *prev_pos)
         ;
-        reset_lock_delay.set_to(false);
+        reverted_rotation = true;
     }
+
+    // if rotation was reverted, fall back to current state
+    let current_state = reset_lock_delay.get();
+    reset_lock_delay.set_to(current_state | !reverted_rotation);
 }
 
 fn basic_rotation(
