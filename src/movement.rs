@@ -1,11 +1,11 @@
-mod movement_types;
+mod types;
 
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::heap::HeapEntry;
 use crate::tetromino::Tetromino;
 use crate::kb_input::{KeyAction, KeyActions};
-pub use movement_types::*;
+pub use self::types::*;
 
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
