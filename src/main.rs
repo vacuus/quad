@@ -33,10 +33,9 @@ fn main() {
         .insert_resource(GravityTimer::new())
         .insert_resource(MovementTimer::new())
         .insert_resource(LockDelayTimer::new())
-        .insert_resource(Vec::<HeapEntry>::new()) // just a placeholder
-        .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .insert_resource(ResetLockDelay::new())
         .insert_resource(KeyActions::new())
+        .insert_resource(rand::random::<TetrominoType>()) // just a placeholder
         .add_startup_system(setup)
         .add_system(keyboard_input.label(KeyboardInputSystem))
         .add_system(movement.label(MovementSystem).after(KeyboardInputSystem))
@@ -47,20 +46,18 @@ fn main() {
     ;
 }
 
-fn setup(
-    mut commands: Commands,
-    mut heap: ResMut<Vec<HeapEntry>>,
-    mut tetromino_type: ResMut<TetrominoType>,
-) {
+fn setup(mut commands: Commands, mut tetromino_type: ResMut<TetrominoType>) {
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default());
+
     let matrix = Matrix {
         width: 15,
         height: 25,
     };
 
-    *heap = vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize];
-
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.insert_resource(
+        vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize],
+    );
 
     spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
 
