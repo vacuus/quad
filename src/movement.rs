@@ -19,7 +19,6 @@ pub fn movement(
     mut gravity_timer: ResMut<GravityTimer>,
     mut movement_timer: ResMut<MovementTimer>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
-    mut hard_drop_occurred: ResMut<HardDropOccurred>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
@@ -32,7 +31,6 @@ pub fn movement(
         while can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
-        hard_drop_occurred.set();
         return;
     }
 
@@ -91,7 +89,6 @@ pub fn movement(
 
     // reset lock delay if any input
     reset_lock_delay.set_to(!move_x.is_neutral() | !move_y.is_neutral());
-    hard_drop_occurred.reset();
 }
 
 

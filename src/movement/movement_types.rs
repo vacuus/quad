@@ -18,26 +18,6 @@ impl ResetLockDelay {
     }
 }
 
-pub struct HardDropOccurred(bool);
-
-impl HardDropOccurred {
-    pub fn new() -> Self {
-        Self(false)
-    }
-
-    pub fn set(&mut self) {
-        self.0 = true;
-    }
-
-    pub fn reset(&mut self) {
-        self.0 = false;
-    }
-
-    pub fn get(&self) -> bool {
-        self.0
-    }
-}
-
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident) => {

@@ -1,14 +1,9 @@
 use bevy::prelude::*;
-use crate::movement::{
-    MoveY,
-    LockDelayTimer,
-    HardDropOccurred,
-    ResetLockDelay,
-    can_move,
-};
+use crate::movement::{MoveY, LockDelayTimer, ResetLockDelay, can_move};
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
 use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
 use crate::matrix::{Matrix, MatrixPosition};
+use crate::kb_input::{KeyAction, KeyActions};
 
 
 #[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
@@ -18,8 +13,8 @@ pub struct ProcessingSystem;
 pub fn processing(
     mut commands: Commands,
     time: Res<Time>,
+    keyboard_input: Res<KeyActions>,
     reset_lock_delay: Res<ResetLockDelay>,
-    hard_drop_occurred: Res<HardDropOccurred>,
     mut heap: ResMut<Vec<HeapEntry>>,
     mut tetromino_type: ResMut<TetrominoType>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
@@ -38,7 +33,9 @@ pub fn processing(
     if !can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
         // If the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
-        if !hard_drop_occurred.get() && !lock_delay_timer.just_finished() {
+        if !keyboard_input.get_action(KeyAction::HardDropJustPressed)
+            && !lock_delay_timer.just_finished()
+        {
             return;
         }
         lock_delay_timer.reset();
