@@ -30,9 +30,9 @@ const BLOCK_SIZE: f32 = 25.0;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(GravityTimer(Timer::from_seconds(0.75, false)))
-        .insert_resource(MovementTimer(Timer::from_seconds(0.08, false)))
-        .insert_resource(LockDelayTimer(Timer::from_seconds(0.25, false)))
+        .insert_resource(GravityTimer::new())
+        .insert_resource(MovementTimer::new())
+        .insert_resource(LockDelayTimer::new())
         .insert_resource(Vec::<HeapEntry>::new()) // just a placeholder
         .insert_resource(rand::random::<TetrominoType>()) // also a placeholder
         .insert_resource(ResetLockDelay::new())

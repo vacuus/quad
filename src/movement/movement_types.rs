@@ -20,8 +20,14 @@ impl ResetLockDelay {
 
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
-    ($ty:ident) => {
-        pub struct $ty(pub Timer);
+    ($ty:ident, $duration:literal) => {
+        pub struct $ty(Timer);
+
+        impl $ty {
+            pub fn new() -> Self {
+                Self(Timer::from_seconds($duration, false))
+            }
+        }
 
         impl Deref for $ty {
             type Target = Timer;
@@ -39,9 +45,9 @@ macro_rules! timer {
     }
 }
 
-timer!(GravityTimer);
-timer!(MovementTimer);
-timer!(LockDelayTimer);
+timer!(GravityTimer, 0.75);
+timer!(MovementTimer, 0.08);
+timer!(LockDelayTimer, 0.25);
 
 pub trait MoveOffset {
     fn set_neutral(&mut self);
