@@ -52,21 +52,19 @@ pub fn keyboard_input(
     let prev_clkw_pressed = key_actions.get_action(ClkwPressed);
     let prev_cclw_pressed = key_actions.get_action(CclwPressed);
 
-    let key_events = key_events
+    for (state, key_code) in key_events
         .iter()
         .map(|key| (key.state, key.key_code.expect(
-            "Key not supported on activ keyboard layout (?)",
+            "Key not supported on active keyboard layout (?)",
         )))
-    ;
-
-    for (state, key_code) in key_events {
-        use KeyCode::{I, J, K, L, X, Z, Up, Left, Right, Down};
+    {
+        use KeyCode::{W, A, S, D, I, J, K, L, X, Z, Up, Left, Right, Down};
 
         match key_code {
-            I | Up    => key_actions.set_action(HardDropPressed, state),
-            J | Left  => key_actions.set_action(LeftPressed, state),
-            K | Down  => key_actions.set_action(DownPressed, state),
-            L | Right => key_actions.set_action(RightPressed, state),
+            W | I | Up    => key_actions.set_action(HardDropPressed, state),
+            A | J | Left  => key_actions.set_action(LeftPressed, state),
+            S | K | Down  => key_actions.set_action(DownPressed, state),
+            D | L | Right => key_actions.set_action(RightPressed, state),
             Z         => key_actions.set_action(CclwPressed, state),
             X         => key_actions.set_action(ClkwPressed, state),
             _         => {},

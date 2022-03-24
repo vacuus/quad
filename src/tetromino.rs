@@ -7,7 +7,7 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::BLOCK_SIZE;
 
 
-// A block can be part of the current tetromino
+// denotes a block that is part of the current tetromino
 #[derive(Debug, Component)]
 pub struct Tetromino;
 
@@ -73,6 +73,7 @@ impl Distribution<TetrominoType> for Standard {
         }
     }
 }
+
 
 pub fn spawn_tetromino(
     commands: &mut Commands,
