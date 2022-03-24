@@ -49,10 +49,16 @@ timer!(GravityTimer, 0.75);
 timer!(MovementTimer, 0.08);
 timer!(LockDelayTimer, 0.25);
 
-pub trait MoveOffset {
-    fn set_neutral(&mut self);
+pub trait MoveOffset: PartialEq + Sized {
+    const NEUTRAL: Self;
 
-    fn is_neutral(&self) -> bool;
+    fn set_neutral(&mut self) {
+        *self = <Self as MoveOffset>::NEUTRAL;
+    }
+
+    fn is_neutral(&self) -> bool {
+        *self == <Self as MoveOffset>::NEUTRAL
+    }
 
     fn to_offset(&self) -> (i16, i16);
 }
@@ -61,13 +67,7 @@ pub trait MoveOffset {
 pub struct MoveNeutral;
 
 impl MoveOffset for MoveNeutral {
-    fn set_neutral(&mut self) {
-        *self = Self;
-    }
-
-    fn is_neutral(&self) -> bool {
-        true
-    }
+    const NEUTRAL: Self = Self;
 
     fn to_offset(&self) -> (i16, i16) {
         (0, 0)
@@ -82,13 +82,7 @@ pub enum MoveX {
 }
 
 impl MoveOffset for MoveX {
-    fn set_neutral(&mut self) {
-        *self = Self::Neutral;
-    }
-
-    fn is_neutral(&self) -> bool {
-        *self == Self::Neutral
-    }
+    const NEUTRAL: Self = Self::Neutral;
 
     fn to_offset(&self) -> (i16, i16) {
         match *self {
@@ -110,7 +104,7 @@ impl MoveY {
     pub fn move_down(&mut self) {
         *self = match self {
             Self::Neutral => Self::Down1,
-            // Though unlikely, the user and the soft drop could
+            // Though unlikely, the user and the gravity could
             // each decrement 'move_y' on the same frame
             Self::Down1 => Self::Down2,
             _ => *self,
@@ -127,13 +121,7 @@ impl MoveY {
 }
 
 impl MoveOffset for MoveY {
-    fn set_neutral(&mut self) {
-        *self = Self::Neutral;
-    }
-
-    fn is_neutral(&self) -> bool {
-        *self == Self::Neutral
-    }
+    const NEUTRAL: Self = Self::Neutral;
 
     fn to_offset(&self) -> (i16, i16) {
         match *self {
@@ -145,19 +133,9 @@ impl MoveOffset for MoveY {
 }
 
 impl MoveOffset for (MoveX, MoveY) {
-    // should never be called
-    fn set_neutral(&mut self) {
-        unreachable!()
-    }
-
-    // should never be called
-    fn is_neutral(&self) -> bool {
-        unreachable!()
-    }
+    const NEUTRAL: Self = (MoveX::Neutral, MoveY::Neutral);
 
     fn to_offset(&self) -> (i16, i16) {
-        let x_offset = self.0.to_offset().0;
-        let y_offset = self.1.to_offset().1;
-        (x_offset, y_offset)
+        (self.0.to_offset().0, self.1.to_offset().1)
     }
 }
