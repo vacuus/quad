@@ -36,16 +36,17 @@ pub fn movement(
 
     // get movement input
     let (mut move_x, mut move_y) = {
-        let move_x = if keyboard_input.get_action_state(KeyAction::LeftPressed)
-        {
-            MoveX::Left
-        } else if keyboard_input.get_action_state(KeyAction::RightPressed) {
-            MoveX::Right
-        } else {
-            MoveX::Neutral
+        use self::KeyAction::*;
+
+        let left_press = keyboard_input.get_action_state(LeftPressed);
+        let right_press = keyboard_input.get_action_state(RightPressed);
+        let move_x = match (left_press, right_press) {
+            (true, true) | (false, false) => MoveX::Neutral,
+            (true, false) => MoveX::Left,
+            (false, true) => MoveX::Right,
         };
-        let move_y = if keyboard_input.get_action_state(KeyAction::DownPressed)
-        {
+
+        let move_y = if keyboard_input.get_action_state(DownPressed) {
             MoveY::Down1
         } else {
             MoveY::Neutral
@@ -89,7 +90,7 @@ pub fn movement(
         **pos += (move_x, move_y).to_offset();
     });
 
-    // reset lock delay if any input
+    // reset lock delay if any movement
     reset_lock_delay.set_to(!move_x.is_neutral() | !move_y.is_neutral());
 }
 
@@ -97,19 +98,19 @@ pub fn movement(
 use ::core::borrow::Borrow;
 
 
-pub fn can_move<T, M>(
-    mut tetromino_pos: impl Iterator<Item = T>,
+pub fn can_move<P, M>(
+    mut tetromino_pos: impl Iterator<Item = P>,
     matrix: &Matrix,
     movement: M,
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
-    T: Borrow<MatrixPosition>,
+    P: Borrow<MatrixPosition>,
     M: MoveOffset,
 {
     tetromino_pos
         .all(|pos| {
-            let mut pos = *<T as Borrow<MatrixPosition>>::borrow(&pos);
+            let mut pos = *<P as Borrow<MatrixPosition>>::borrow(&pos);
             // get neighboring position in relevant direction
             pos += <M as MoveOffset>::to_offset(&movement);
             let (x, y) = (pos.x, pos.y);
