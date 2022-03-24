@@ -25,9 +25,9 @@ pub fn rotation(
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
     // get rotation input
-    let rotate = if keyboard_input.get_action(KeyAction::ClockwiseJustPressed) {
+    let rotate = if keyboard_input.get_action(KeyAction::ClkwJustPressed) {
         Rotate::Clockwise
-    } else if keyboard_input.get_action(KeyAction::CounterclockwiseJustPressed)
+    } else if keyboard_input.get_action(KeyAction::CclwJustPressed)
     {
         Rotate::Counterclockwise
     } else {
