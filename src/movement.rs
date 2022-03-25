@@ -17,7 +17,8 @@ pub fn movement(
     heap: Res<Vec<HeapEntry>>,
     keyboard_input: Res<KeyActions>,
     mut gravity_timer: ResMut<GravityTimer>,
-    mut movement_timer: ResMut<MovementTimer>,
+    mut movement_x_timer: ResMut<MovementXTimer>,
+    mut movement_y_timer: ResMut<MovementYTimer>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
@@ -56,12 +57,18 @@ pub fn movement(
     };
 
     // only allow movement every so often
-    movement_timer.tick(time.delta());
-    if movement_timer.just_finished() {
-        movement_timer.reset();
+    movement_x_timer.tick(time.delta());
+    if movement_x_timer.just_finished() {
+        movement_x_timer.reset();
     } else {
-        // ignore movement input, but gravity can still take effect
+        // ignore movement input
         move_x.set_neutral();
+    }
+
+    movement_y_timer.tick(time.delta());
+    if movement_y_timer.just_finished() {
+        movement_y_timer.reset();
+    } else {
         move_y.set_neutral();
     }
 

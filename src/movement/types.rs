@@ -46,7 +46,8 @@ macro_rules! timer {
 }
 
 timer!(GravityTimer, 0.75);
-timer!(MovementTimer, 0.08);
+timer!(MovementXTimer, 0.08);
+timer!(MovementYTimer, 0.08);
 timer!(LockDelayTimer, 0.25);
 
 pub trait MoveOffset: PartialEq + Sized {

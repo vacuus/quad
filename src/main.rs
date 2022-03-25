@@ -10,7 +10,8 @@ use bevy::prelude::*;
 use movement::{
     MovementSystem,
     GravityTimer,
-    MovementTimer,
+    MovementXTimer,
+    MovementYTimer,
     LockDelayTimer,
     ResetLockDelay,
     movement,
@@ -31,7 +32,8 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(GravityTimer::new())
-        .insert_resource(MovementTimer::new())
+        .insert_resource(MovementXTimer::new())
+        .insert_resource(MovementYTimer::new())
         .insert_resource(LockDelayTimer::new())
         .insert_resource(ResetLockDelay::new())
         .insert_resource(KeyActions::new())
