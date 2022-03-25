@@ -25,13 +25,12 @@ pub fn rotation(
     mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
 ) {
     // get rotation input
-    let rotate = if keyboard_input.get_action_state(KeyAction::ClkwJustPressed)
-    {
-        Rotate::Clockwise
-    } else if keyboard_input.get_action_state(KeyAction::CclwJustPressed) {
-        Rotate::Counterclockwise
-    } else {
-        return;
+    let clkw = keyboard_input.get_action_state(KeyAction::ClkwJustPressed);
+    let cclw = keyboard_input.get_action_state(KeyAction::CclwJustPressed);
+    let rotate = match (clkw, cclw) {
+        (true, true) | (false, false) => return,
+        (true, false) => Rotate::Clockwise,
+        (false, true) => Rotate::Counterclockwise,
     };
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
