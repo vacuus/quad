@@ -1,5 +1,5 @@
 use bevy::core::Timer;
-use ::core::ops::{Deref, DerefMut};
+use bevy::prelude::{Deref, DerefMut};
 
 
 pub struct ResetLockDelay(bool);
@@ -21,25 +21,12 @@ impl ResetLockDelay {
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident, $duration:literal) => {
+        #[derive(Deref, DerefMut)]
         pub struct $ty(Timer);
 
         impl $ty {
             pub fn new() -> Self {
                 Self(Timer::from_seconds($duration, false))
-            }
-        }
-
-        impl Deref for $ty {
-            type Target = Timer;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-
-        impl DerefMut for $ty {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.0
             }
         }
     }
