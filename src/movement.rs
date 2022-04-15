@@ -8,10 +8,6 @@ use crate::kb_input::{KeyAction, KeyActions};
 pub use self::types::*;
 
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct MovementSystem;
-
-
 pub fn movement(
     time: Res<Time>,
     heap: Res<Vec<HeapEntry>>,

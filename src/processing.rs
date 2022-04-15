@@ -6,10 +6,6 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::kb_input::{KeyAction, KeyActions};
 
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct ProcessingSystem;
-
-
 pub fn processing(
     mut commands: Commands,
     time: Res<Time>,

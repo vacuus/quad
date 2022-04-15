@@ -6,9 +6,6 @@ use crate::heap::HeapEntry;
 use crate::kb_input::{KeyAction, KeyActions};
 
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct RotationSystem;
-
 #[derive(Copy, Clone, PartialEq)]
 pub enum Rotate {
     Clockwise,

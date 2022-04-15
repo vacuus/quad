@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy::input::{ElementState, keyboard::KeyboardInput};
 
-#[derive(SystemLabel, Clone, Hash, Debug, PartialEq, Eq)]
-pub struct KeyboardInputSystem;
 
 #[repr(u16)]
 pub enum KeyAction {
