@@ -46,6 +46,7 @@ pub fn keyboard_input(
 ) {
     use self::KeyAction::*;
 
+
     let prev_hrddrp_pressed = key_actions.get_action_state(HardDropPressed);
     let prev_clkw_pressed = key_actions.get_action_state(ClkwPressed);
     let prev_cclw_pressed = key_actions.get_action_state(CclwPressed);
@@ -69,12 +70,13 @@ pub fn keyboard_input(
         }
     }
 
-    let mut set_just_pressed = |cond: bool, pressed, just_pressed| if !cond &&
-        key_actions.get_action_state(pressed)
-    {
-        key_actions.set_action_state(just_pressed, ElementState::Pressed);
-    } else {
-        key_actions.set_action_state(just_pressed, ElementState::Released);
+    let mut set_just_pressed = |prev_pressed: bool, p_action, jp_action| {
+        let state = if !prev_pressed && key_actions.get_action_state(p_action) {
+            ElementState::Pressed
+        } else {
+            ElementState::Released
+        };
+        key_actions.set_action_state(jp_action, state);
     };
 
     set_just_pressed(prev_hrddrp_pressed, HardDropPressed, HardDropJustPressed);

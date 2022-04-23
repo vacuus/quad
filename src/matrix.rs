@@ -25,6 +25,6 @@ impl AddAssign<(i16, i16)> for MatrixPosition {
 
 impl Borrow<MatrixPosition> for &Mut<'_, MatrixPosition> {
     fn borrow(&self) -> &MatrixPosition {
-        &**self
+        &*self
     }
 }

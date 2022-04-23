@@ -26,7 +26,7 @@ pub fn processing(
     if reset_lock_delay.get() {
         lock_delay_timer.reset();
     }
-    if !can_move(tetromino_pos.iter(), &matrix, MoveY::Down1, &heap) {
+    if !can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
         // if the tetromino can't move down, commence/continue the lock delay
         lock_delay_timer.tick(time.delta());
         if !keyboard_input.get_action_state(KeyAction::HardDropJustPressed)

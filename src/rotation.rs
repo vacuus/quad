@@ -4,6 +4,7 @@ use crate::tetromino::{Tetromino, TetrominoType};
 use crate::movement::{MoveNeutral, ResetLockDelay, can_move};
 use crate::heap::HeapEntry;
 use crate::kb_input::{KeyAction, KeyActions};
+use ::core::iter;
 
 
 #[derive(Copy, Clone, PartialEq)]
@@ -31,26 +32,21 @@ pub fn rotation(
     };
 
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
-    let matrix = matrix.single();
     // store original positions just in case rotation needs to be reverted
-    let prev_positions = tetromino_pos
-        .iter()
-        .map(|pos| **pos)
-        .collect::<Vec<_>>()
-    ;
+    let prev_pos = tetromino_pos.iter().map(|pos| **pos).collect::<Vec<_>>();
+    let matrix = matrix.single();
 
     basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
 
     let mut reverted_rotation = false;
 
     // wall kicks
-    if !can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
+    if !can_move(&tetromino_pos, &matrix, MoveNeutral, &heap) {
         // relative translations from one kick to the next
         // (according to the wiki ¯\_(ツ)_/¯) T-spins ──────┬───┬
-        let try_moves = [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)];
-        for try_move in try_moves {
+        for try_move in [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)] {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
-            if can_move(tetromino_pos.iter(), &matrix, MoveNeutral, &heap) {
+            if can_move(&tetromino_pos, &matrix, MoveNeutral, &heap) {
                 // successful rotation, so reset lock delay
                 reset_lock_delay.set_to(true);
                 return;
@@ -58,9 +54,7 @@ pub fn rotation(
         }
 
         // revert rotation
-        tetromino_pos
-            .iter_mut()
-            .zip(&prev_positions)
+        iter::zip(&mut tetromino_pos, &prev_pos)
             .for_each(|(pos, prev_pos)| **pos = *prev_pos)
         ;
         reverted_rotation = true;
@@ -77,6 +71,7 @@ fn basic_rotation(
     rotate: Rotate,
 ) {
     use TetrominoType::*;
+
 
     let rotation_grid_size = match tetromino_type {
         I => 4,
