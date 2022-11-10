@@ -96,6 +96,8 @@ pub fn spawn_tetromino(
     };
 
     *origin = rotation_origin;
+    origin.x += 3;
+    origin.y += matrix.height - 4;
 
     for (x, y) in positions {
         let x = x + 3;
