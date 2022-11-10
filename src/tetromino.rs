@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
+use rand::Rng;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::BLOCK_SIZE;
 
@@ -42,57 +39,22 @@ pub const J_COLOR: Color = Color::rgb(0.9, 0.2, 0.0); // orange
 pub struct TetrominoBlock;
 
 
-#[derive(Copy, Clone, Debug)]
-pub enum TetrominoType {
-    I,
-    O,
-    T,
-    S,
-    Z,
-    L,
-    J,
-//     unimplemented
-//     Other(u16),
-}
-
-// used in pseudorandom generation of tetromino type during spawning
-impl Distribution<TetrominoType> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
-        use self::TetrominoType::*;
-
-//         match rng.gen_range(..) {
-        match rng.gen_range(0..7) {
-            0 => I,
-            1 => O,
-            2 => T,
-            3 => S,
-            4 => Z,
-            5 => L,
-            6 => J,
-            _ => unreachable!(),
-//             unimplemented
-//             n => Other(n),
-        }
-    }
-}
-
-
 pub fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
     origin: &mut MatrixPosition,
 ) {
-    let tetromino_type = rand::random::<TetrominoType>();
-    let (positions, rotation_origin, color) = match tetromino_type {
-        TetrominoType::I => (I, I_ORIGIN, I_COLOR),
-        TetrominoType::O => (O, O_ORIGIN, O_COLOR),
-        TetrominoType::T => (T, T_ORIGIN, T_COLOR),
-        TetrominoType::S => (S, S_ORIGIN, S_COLOR),
-        TetrominoType::Z => (Z, Z_ORIGIN, Z_COLOR),
-        TetrominoType::L => (L, L_ORIGIN, L_COLOR),
-        TetrominoType::J => (J, J_ORIGIN, J_COLOR),
-//         unimplemented
-//         _ => ???,
+    let tetromino_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
+    let (positions, rotation_origin, color) = match tetromino_variant_idx {
+        0 => (I, I_ORIGIN, I_COLOR),
+        1 => (O, O_ORIGIN, O_COLOR),
+        2 => (T, T_ORIGIN, T_COLOR),
+        3 => (S, S_ORIGIN, S_COLOR),
+        4 => (Z, Z_ORIGIN, Z_COLOR),
+        5 => (L, L_ORIGIN, L_COLOR),
+        6 => (J, J_ORIGIN, J_COLOR),
+        _ => unreachable!(),
+//         unimplemented: other variants
     };
 
     *origin = rotation_origin;
