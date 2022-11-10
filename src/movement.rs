@@ -3,7 +3,7 @@ mod types;
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::heap::HeapEntry;
-use crate::tetromino::Tetromino;
+use crate::tetromino::TetrominoBlock;
 use crate::kb_input::{KeyAction, KeyActions};
 pub use self::types::*;
 
@@ -12,12 +12,13 @@ pub fn movement(
     time: Res<Time>,
     heap: Res<Vec<HeapEntry>>,
     keyboard_input: Res<KeyActions>,
+    mut origin: ResMut<MatrixPosition>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
     mut move_y_timer: ResMut<MovementYTimer>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
-    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
+    mut tetromino_pos: Query<&mut MatrixPosition, With<TetrominoBlock>>,
 ) {
     // each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
@@ -89,6 +90,7 @@ pub fn movement(
     let offset = (move_x, move_y).to_offset();
     // apply movement
     tetromino_pos.iter_mut().for_each(|pos| { **pos += offset; });
+    *origin += offset;
 
     // reset lock delay if any movement
     reset_lock_delay.set_to(!move_x.is_neutral() | !move_y.is_neutral());

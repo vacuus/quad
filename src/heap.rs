@@ -1,6 +1,6 @@
 use bevy::ecs::{system::Commands, entity::Entity};
 use crate::matrix::{Matrix, MatrixPosition};
-use crate::tetromino::Tetromino;
+use crate::tetromino::TetrominoBlock;
 
 
 #[derive(Clone)]
@@ -22,7 +22,7 @@ pub fn add_tetromino_to_heap(
         .for_each(|&entity| {
             commands
                 .entity(entity)
-                .remove::<Tetromino>()
+                .remove::<TetrominoBlock>()
             ;
         })
     ;

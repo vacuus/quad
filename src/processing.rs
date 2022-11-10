@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::movement::{MoveY, LockDelayTimer, ResetLockDelay, can_move};
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
-use crate::tetromino::{Tetromino, TetrominoType, spawn_tetromino};
+use crate::tetromino::{TetrominoBlock, spawn_tetromino};
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::kb_input::{KeyAction, KeyActions};
 
@@ -12,10 +12,10 @@ pub fn processing(
     keyboard_input: Res<KeyActions>,
     reset_lock_delay: Res<ResetLockDelay>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    mut tetromino_type: ResMut<TetrominoType>,
+    mut origin: ResMut<MatrixPosition>,
     mut lock_delay_timer: ResMut<LockDelayTimer>,
     matrix: Query<&Matrix>,
-    tetromino: Query<(Entity, &MatrixPosition), With<Tetromino>>,
+    tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
 ) {
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino
         .iter()
@@ -44,6 +44,6 @@ pub fn processing(
             &tetromino_ents,
             &tetromino_pos,
         );
-        spawn_tetromino(&mut commands, &matrix, &mut tetromino_type);
+        spawn_tetromino(&mut commands, &matrix, &mut origin);
     }
 }

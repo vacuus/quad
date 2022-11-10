@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
-use crate::tetromino::{Tetromino, TetrominoType};
+use crate::tetromino::TetrominoBlock;
 use crate::movement::{MoveNeutral, ResetLockDelay, can_move};
 use crate::heap::HeapEntry;
 use crate::kb_input::{KeyAction, KeyActions};
@@ -16,11 +16,11 @@ pub enum Rotate {
 
 pub fn rotation(
     heap: Res<Vec<HeapEntry>>,
+    origin: Res<MatrixPosition>,
     keyboard_input: Res<KeyActions>,
-    tetromino_type: Res<TetrominoType>,
     mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
-    mut tetromino_pos: Query<&mut MatrixPosition, With<Tetromino>>,
+    mut tetromino_pos: Query<&mut MatrixPosition, With<TetrominoBlock>>,
 ) {
     // get rotation input
     let clkw = keyboard_input.get_action_state(KeyAction::ClkwJustPressed);
@@ -36,7 +36,7 @@ pub fn rotation(
     let prev_pos = tetromino_pos.iter().map(|pos| **pos).collect::<Vec<_>>();
     let matrix = matrix.single();
 
-    basic_rotation(&mut tetromino_pos, *tetromino_type, rotate);
+    basic_rotation(&mut tetromino_pos, rotate, *origin);
 
     let mut reverted_rotation = false;
 
@@ -67,34 +67,22 @@ pub fn rotation(
 
 fn basic_rotation(
     tetromino_pos: &mut Vec<Mut<MatrixPosition>>,
-    tetromino_type: TetrominoType,
     rotate: Rotate,
+    origin: MatrixPosition,
 ) {
-    use TetrominoType::*;
-
-
-    let rotation_grid_size = match tetromino_type {
-        I => 4,
-        O => 2,
-        T | Z | S | L | J => 3,
-    };
-
-    let min_x = tetromino_pos.iter().map(|pos| pos.x).min().unwrap();
-    let min_y = tetromino_pos.iter().map(|pos| pos.y).min().unwrap();
-
-    let center_x = min_x + rotation_grid_size / 2;
-    let center_y = min_y + rotation_grid_size / 2;
-
-    for pos in &mut *tetromino_pos {
-        let x = pos.x - center_x;
-        let y = pos.y - center_y;
-
-        if rotate == Rotate::Clockwise {
-            pos.x = y + center_x;
-            pos.y = -x + center_y;
-        } else {
-            pos.x = -y + center_x;
-            pos.y = x + center_y;
+    for pos in tetromino_pos {
+        let norm_x = pos.x - origin.x;
+        let norm_y = pos.y - origin.y;
+        match rotate {
+            Rotate::Clockwise => {
+                pos.x = norm_y;
+                pos.y = -norm_x;
+            },
+            Rotate::Counterclockwise => {
+                pos.x = -norm_y;
+                pos.y = norm_x;
+            },
         }
+        **pos += (origin.x, origin.y);
     }
 }

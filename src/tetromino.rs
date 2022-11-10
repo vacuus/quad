@@ -7,43 +7,40 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::BLOCK_SIZE;
 
 
+// starting positions
+pub const I: [(i16, i16); 4]  = [(0, 1), (1, 1), (2, 1), (3, 1)];
+pub const I_ORIGIN: MatrixPosition = MatrixPosition { x: 2, y: 1};
+pub const I_COLOR: Color = Color::rgb(0.0, 0.7, 0.7); // cyan
+
+pub const O: [(i16, i16); 4]  = [(1, 1), (1, 2), (2, 1), (2, 2)];
+pub const O_ORIGIN: MatrixPosition = MatrixPosition { x: 2, y: 2};
+pub const O_COLOR: Color = Color::rgb(0.7, 0.7, 0.0); // yellow
+
+pub const T: [(i16, i16); 4]  = [(0, 1), (1, 1), (2, 1), (1, 2)];
+pub const T_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 1};
+pub const T_COLOR: Color = Color::rgb(0.7, 0.0, 0.7); // purple
+
+pub const Z: [(i16, i16); 4]  = [(0, 1), (1, 1), (1, 0), (2, 0)];
+pub const Z_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
+pub const Z_COLOR: Color = Color::rgb(0.7, 0.0, 0.0); // red
+
+pub const S: [(i16, i16); 4]  = [(2, 1), (1, 1), (1, 0), (0, 0)];
+pub const S_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
+pub const S_COLOR: Color = Color::rgb(0.0, 0.7, 0.0); // green
+
+pub const L: [(i16, i16); 4]  = [(0, 0), (1, 0), (2, 0), (2, 1)];
+pub const L_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
+pub const L_COLOR: Color = Color::rgb(0.0, 0.0, 0.9); // blue
+
+pub const J: [(i16, i16); 4]  = [(0, 0), (0, 1), (1, 0), (2, 0)];
+pub const J_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
+pub const J_COLOR: Color = Color::rgb(0.9, 0.2, 0.0); // orange
+
+
 // denotes a block that is part of the current tetromino
 #[derive(Debug, Component)]
-pub struct Tetromino;
+pub struct TetrominoBlock;
 
-impl Tetromino {
-    fn blocks_from_type(tetromino_type: TetrominoType)
-    -> (i16, Color, [(i16, i16); 4]) {
-        use self::TetrominoType::*;
-    
-        let matrix_size = match tetromino_type {
-            I | O => 4,
-            T | Z | S | L | J => 3,
-        };
-    
-        let color = match tetromino_type {
-            I => Color::rgb(0.0, 0.7, 0.7), // cyan
-            O => Color::rgb(0.7, 0.7, 0.0), // yellow
-            T => Color::rgb(0.7, 0.0, 0.7), // purple
-            Z => Color::rgb(0.7, 0.0, 0.0), // red
-            S => Color::rgb(0.0, 0.7, 0.0), // green
-            L => Color::rgb(0.0, 0.0, 0.9), // blue
-            J => Color::rgb(0.9, 0.2, 0.0), // orange
-        };
-
-        let rel_start_positions = match tetromino_type {
-            I => [(1, 3), (1, 2), (1, 1), (1, 0)],
-            O => [(1, 1), (1, 2), (2, 1), (2, 2)],
-            T => [(0, 1), (1, 1), (2, 1), (1, 2)],
-            Z => [(0, 2), (1, 2), (1, 1), (2, 1)],
-            S => [(2, 2), (1, 2), (1, 1), (0, 1)],
-            L => [(0, 2), (0, 1), (1, 1), (2, 1)],
-            J => [(0, 1), (1, 1), (2, 1), (2, 2)],
-        };
-
-        (matrix_size, color, rel_start_positions)
-    }
-}
 
 #[derive(Copy, Clone, Debug)]
 pub enum TetrominoType {
@@ -54,6 +51,8 @@ pub enum TetrominoType {
     Z,
     L,
     J,
+//     unimplemented
+//     Other(u16),
 }
 
 // used in pseudorandom generation of tetromino type during spawning
@@ -61,6 +60,7 @@ impl Distribution<TetrominoType> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TetrominoType {
         use self::TetrominoType::*;
 
+//         match rng.gen_range(..) {
         match rng.gen_range(0..7) {
             0 => I,
             1 => O,
@@ -70,6 +70,8 @@ impl Distribution<TetrominoType> for Standard {
             5 => L,
             6 => J,
             _ => unreachable!(),
+//             unimplemented
+//             n => Other(n),
         }
     }
 }
@@ -78,17 +80,27 @@ impl Distribution<TetrominoType> for Standard {
 pub fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
-    tetromino_type: &mut TetrominoType,
+    origin: &mut MatrixPosition,
 ) {
-    *tetromino_type = rand::random::<TetrominoType>();
+    let tetromino_type = rand::random::<TetrominoType>();
+    let (positions, rotation_origin, color) = match tetromino_type {
+        TetrominoType::I => (I, I_ORIGIN, I_COLOR),
+        TetrominoType::O => (O, O_ORIGIN, O_COLOR),
+        TetrominoType::T => (T, T_ORIGIN, T_COLOR),
+        TetrominoType::S => (S, S_ORIGIN, S_COLOR),
+        TetrominoType::Z => (Z, Z_ORIGIN, Z_COLOR),
+        TetrominoType::L => (L, L_ORIGIN, L_COLOR),
+        TetrominoType::J => (J, J_ORIGIN, J_COLOR),
+//         unimplemented
+//         _ => ???,
+    };
 
-    let (tetromino_matrix_size, color, positions) = Tetromino::blocks_from_type(
-        *tetromino_type
-    );
+    *origin = rotation_origin;
 
     for (x, y) in positions {
         let x = x + 3;
-        let y = matrix.height - tetromino_matrix_size + y;
+        // fix
+        let y = matrix.height - 4 + y;
 
         commands
             .spawn_bundle(SpriteBundle {
@@ -103,7 +115,7 @@ pub fn spawn_tetromino(
                 ..SpriteBundle::default()
             })
             .insert(MatrixPosition { x, y })
-            .insert(Tetromino)
+            .insert(TetrominoBlock)
         ;
     }
 }
