@@ -16,7 +16,6 @@ pub fn movement(
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
     mut move_y_timer: ResMut<MovementYTimer>,
-    mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<TetrominoBlock>>,
 ) {
@@ -91,9 +90,6 @@ pub fn movement(
     // apply movement
     tetromino_pos.iter_mut().for_each(|pos| { **pos += offset; });
     *origin += offset;
-
-    // reset lock delay if any movement
-    reset_lock_delay.set_to(!move_x.is_neutral() | !move_y.is_neutral());
 }
 
 

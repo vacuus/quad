@@ -2,22 +2,6 @@ use bevy::time::Timer;
 use bevy::prelude::{Deref, DerefMut};
 
 
-pub struct ResetLockDelay(bool);
-
-impl ResetLockDelay {
-    pub fn new() -> Self {
-        Self(false)
-    }
-
-    pub fn set_to(&mut self, state: bool) {
-        self.0 = state;
-    }
-
-    pub fn get(&self) -> bool {
-        self.0
-    }
-}
-
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident, $duration:literal) => {
@@ -35,7 +19,6 @@ macro_rules! timer {
 timer!(GravityTimer, 0.75);
 timer!(MovementXTimer, 0.08);
 timer!(MovementYTimer, 0.08);
-timer!(LockDelayTimer, 0.25);
 
 pub trait MoveOffset: PartialEq + Sized {
     const NEUTRAL: Self;

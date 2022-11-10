@@ -11,8 +11,6 @@ use movement::{
     GravityTimer,
     MovementXTimer,
     MovementYTimer,
-    LockDelayTimer,
-    ResetLockDelay,
     movement,
 };
 use rotation::rotation;
@@ -33,8 +31,6 @@ fn main() {
         .insert_resource(GravityTimer::new())
         .insert_resource(MovementXTimer::new())
         .insert_resource(MovementYTimer::new())
-        .insert_resource(LockDelayTimer::new())
-        .insert_resource(ResetLockDelay::new())
         .insert_resource(KeyActions::new())
         .insert_resource(MatrixPosition { x: 0, y: 0})
         .add_startup_system(setup)

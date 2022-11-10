@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoBlock;
-use crate::movement::{MoveNeutral, ResetLockDelay, can_move};
+use crate::movement::{MoveNeutral, can_move};
 use crate::heap::HeapEntry;
 use crate::kb_input::{KeyAction, KeyActions};
 use ::core::iter;
@@ -18,7 +18,6 @@ pub fn rotation(
     heap: Res<Vec<HeapEntry>>,
     origin: Res<MatrixPosition>,
     keyboard_input: Res<KeyActions>,
-    mut reset_lock_delay: ResMut<ResetLockDelay>,
     matrix: Query<&Matrix>,
     mut tetromino_pos: Query<&mut MatrixPosition, With<TetrominoBlock>>,
 ) {
@@ -38,8 +37,6 @@ pub fn rotation(
 
     basic_rotation(&mut tetromino_pos, rotate, *origin);
 
-    let mut reverted_rotation = false;
-
     // wall kicks
     if !can_move(&tetromino_pos, &matrix, MoveNeutral, &heap) {
         // relative translations from one kick to the next
@@ -47,8 +44,7 @@ pub fn rotation(
         for try_move in [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)] {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
             if can_move(&tetromino_pos, &matrix, MoveNeutral, &heap) {
-                // successful rotation, so reset lock delay
-                reset_lock_delay.set_to(true);
+                // kick was successful
                 return;
             }
         }
@@ -57,12 +53,7 @@ pub fn rotation(
         iter::zip(&mut tetromino_pos, &prev_pos)
             .for_each(|(pos, prev_pos)| **pos = *prev_pos)
         ;
-        reverted_rotation = true;
     }
-
-    // if rotation was reverted, fall back to current state
-    let current_state = reset_lock_delay.get();
-    reset_lock_delay.set_to(current_state | !reverted_rotation);
 }
 
 fn basic_rotation(
