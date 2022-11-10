@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::input::{ElementState, keyboard::KeyboardInput};
+use bevy::input::keyboard::KeyboardInput;
 
 
 #[repr(u16)]
@@ -52,6 +52,7 @@ pub fn keyboard_input(
 ) {
     use self::KeyAction::*;
     use KeyCode::*;
+    use bevy::input::ButtonState;
 
 
     // used to determine state of just pressed action later
@@ -61,7 +62,7 @@ pub fn keyboard_input(
 
     for (state, key_code) in key_events
         .iter()
-        .map(|(state, key_code)| (
+        .map(|key|
             (key.state, key.key_code.expect("Key not in keyboard map (?)"))
         )
     {
@@ -72,9 +73,9 @@ pub fn keyboard_input(
             D | L | Right => RightPressed,
             Z             => CclwPressed,
             X             => ClkwPressed,
-            _             => {},
+            _             => continue,
         };
-        key_actions.set_action_state(action, state == ElementState::Pressed);
+        key_actions.set_action_state(action, state == ButtonState::Pressed);
     }
 
     let mut set_just_pressed = |prev_pressed: bool, p_action, jp_action| {

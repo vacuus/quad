@@ -44,7 +44,7 @@ pub fn movement(
             (false, true) => MoveX::Right,
         };
 
-        if keyboard_input.get_action_state(DownPressed) {
+        if keyboard_input.get_action_state(SoftDropPressed) {
             (move_x, MoveY::Down1)
         } else {
             (move_x, MoveY::Neutral)

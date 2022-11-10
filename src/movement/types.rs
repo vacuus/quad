@@ -1,4 +1,4 @@
-use bevy::core::Timer;
+use bevy::time::Timer;
 use bevy::prelude::{Deref, DerefMut};
 
 

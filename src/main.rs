@@ -48,8 +48,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, mut tetromino_type: ResMut<TetrominoType>) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(Camera2dBundle::default());
 
     let matrix = Matrix {
         width: 15,

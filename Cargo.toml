@@ -10,6 +10,6 @@ edition = "2021"
 rand = "0.8.4"
 
 [dependencies.bevy]
-version = "0.7"
+version = "0.8"
 default-features = false
-features = ["render", "bevy_winit", "x11"]
+features = ["render", "bevy_winit", "x11", "wayland"]
