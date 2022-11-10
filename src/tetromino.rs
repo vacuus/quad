@@ -9,8 +9,8 @@ pub const I: [(i16, i16); 4]  = [(0, 1), (1, 1), (2, 1), (3, 1)];
 pub const I_ORIGIN: MatrixPosition = MatrixPosition { x: 2, y: 1};
 pub const I_COLOR: Color = Color::rgb(0.0, 0.7, 0.7); // cyan
 
-pub const O: [(i16, i16); 4]  = [(1, 1), (1, 2), (2, 1), (2, 2)];
-pub const O_ORIGIN: MatrixPosition = MatrixPosition { x: 2, y: 2};
+pub const O: [(i16, i16); 4]  = [(0, 0), (0, 1), (1, 0), (1, 1)];
+pub const O_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 1};
 pub const O_COLOR: Color = Color::rgb(0.7, 0.7, 0.0); // yellow
 
 pub const T: [(i16, i16); 4]  = [(0, 1), (1, 1), (2, 1), (1, 2)];
