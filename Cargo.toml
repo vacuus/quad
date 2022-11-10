@@ -12,4 +12,4 @@ rand = "0.8.4"
 [dependencies.bevy]
 version = "0.8"
 default-features = false
-features = ["render", "bevy_winit", "x11", "wayland"]
+features = ["render", "bevy_winit", "bevy_asset", "x11"]
