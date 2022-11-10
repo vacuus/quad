@@ -28,11 +28,11 @@ pub const S: [(i16, i16); 4]  = [(2, 1), (1, 1), (1, 0), (0, 0)];
 pub const S_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
 pub const S_COLOR: Color = Color::rgb(0.0, 0.7, 0.0); // green
 
-pub const L: [(i16, i16); 4]  = [(0, 0), (1, 0), (2, 0), (2, 1)];
+pub const L: [(i16, i16); 4]  = [(0, 0), (0, 1), (1, 0), (2, 0)];
 pub const L_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
 pub const L_COLOR: Color = Color::rgb(0.0, 0.0, 0.9); // blue
 
-pub const J: [(i16, i16); 4]  = [(0, 0), (0, 1), (1, 0), (2, 0)];
+pub const J: [(i16, i16); 4]  = [(0, 0), (1, 0), (2, 0), (2, 1)];
 pub const J_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
 pub const J_COLOR: Color = Color::rgb(0.9, 0.2, 0.0); // orange
 
