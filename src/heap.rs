@@ -19,11 +19,13 @@ pub fn lock(
     mut spawn_notify: EventWriter<SpawnEvent>,
     tetromino: Query<(Entity, &GridPos), With<TetrominoBlock>>,
 ) {
+    let grid_width = grid_size.width;
+
     let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<&GridPos>) =
         tetromino.iter().unzip()
     ;
 
-    if can_move(&tetromino_pos, &grid_size, MoveY::Down1, &heap) {
+    if can_move(&tetromino_pos, grid_width, MoveY::Down1, &heap) {
         return;
     }
 
@@ -31,8 +33,6 @@ pub fn lock(
     // may lose (in the case that a new piece can't be spawned)
     *max_y = tetromino_pos.iter().map(|pos| pos.y).max().unwrap();
     spawn_notify.send(SpawnEvent);
-
-    let matrix_width = grid_size.width;
 
     tetromino_ents
         .into_iter()
@@ -44,7 +44,7 @@ pub fn lock(
         .into_iter()
         .for_each(|pos: &GridPos| {
             // mark position in heap as occupied
-            heap[(pos.x + pos.y * matrix_width) as usize] = HeapEntry::Occupied;
+            heap[(pos.x + pos.y * grid_width) as usize] = HeapEntry::Occupied;
         })
     ;
 }

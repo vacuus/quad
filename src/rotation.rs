@@ -21,6 +21,8 @@ pub fn rotation(
     keyboard_input: Res<KeyActions>,
     mut tetromino_pos: Query<&mut GridPos, With<TetrominoBlock>>,
 ) {
+    let grid_width = grid_size.width;
+
     // get rotation input
     let clkw = keyboard_input.get_action_state(KeyAction::ClkwJustPressed);
     let cclw = keyboard_input.get_action_state(KeyAction::CclwJustPressed);
@@ -37,12 +39,12 @@ pub fn rotation(
     basic_rotation(&mut tetromino_pos, rotate, *origin);
 
     // wall kicks
-    if !can_move(&tetromino_pos, &grid_size, MoveNeutral, &heap) {
+    if !can_move(&tetromino_pos, grid_width, MoveNeutral, &heap) {
         // relative translations from one kick to the next
         // (according to the wiki ¯\_(ツ)_/¯) T-spins ──────┬───┬
         for try_move in [(1, 0), (1, 0), (-3, 0), (-1, 0), (1, -2)] {
             tetromino_pos.iter_mut().for_each(|pos| **pos += try_move);
-            if can_move(&tetromino_pos, &grid_size, MoveNeutral, &heap) {
+            if can_move(&tetromino_pos, grid_width, MoveNeutral, &heap) {
                 // kick was successful
                 return;
             }

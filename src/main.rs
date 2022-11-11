@@ -31,7 +31,7 @@ fn main() {
         .insert_resource(MovementYTimer::new())
         .insert_resource(KeyActions::new())
         // make this extensible
-        .insert_resource(GridSize { width: 10, height: 25 })
+        .insert_resource(GridSize { width: 15, height: 25 })
         .insert_resource(GridPos { x: 0, y: 0})
         // placeholder for max_y
         .insert_resource(0_i16)
