@@ -38,20 +38,21 @@ pub const J_COLOR: Color = Color::rgb(0.9, 0.2, 0.0); // orange
 #[derive(Debug, Component)]
 pub struct TetrominoBlock;
 
-pub struct SpawnEvent;
+// the current piece has been locked, and a new piece will be spawned
+pub struct LockEvent;
 
 
 pub fn spawn(
     mut commands: Commands,
     max_y: Res<i16>,
     mut origin: ResMut<MatrixPosition>,
-    spawn_update: EventReader<SpawnEvent>,
+    lock_update: EventReader<LockEvent>,
     matrix: Query<&Matrix>,
 ) {
-    if spawn_update.is_empty() {
+    if lock_update.is_empty() {
         return;
     }
-    spawn_update.clear();
+    lock_update.clear();
 
     let matrix = matrix.single();
 

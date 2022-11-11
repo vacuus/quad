@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::movement::{MoveY, can_move};
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
-use crate::tetromino::{TetrominoBlock, SpawnEvent};
+use crate::tetromino::{TetrominoBlock, LockEvent};
 use crate::matrix::{Matrix, MatrixPosition};
 
 
@@ -9,7 +9,7 @@ pub fn processing(
     mut commands: Commands,
     mut max_y: ResMut<i16>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    mut spawn_notify: EventWriter<SpawnEvent>,
+    mut lock_notify: EventWriter<LockEvent>,
     matrix: Query<&Matrix>,
     tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
 ) {
@@ -35,6 +35,6 @@ pub fn processing(
             &tetromino_ents,
             &tetromino_pos,
         );
-        spawn_notify.send(SpawnEvent);
+        lock_notify.send(LockEvent);
     }
 }

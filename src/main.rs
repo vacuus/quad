@@ -15,7 +15,7 @@ use movement::{
 };
 use rotation::rotation;
 use matrix::{Matrix, MatrixPosition};
-use tetromino::{SpawnEvent, spawn};
+use tetromino::{LockEvent, spawn};
 use heap::HeapEntry;
 use processing::processing;
 use input::{KeyActions, input};
@@ -34,7 +34,7 @@ fn main() {
         .insert_resource(KeyActions::new())
         .insert_resource(MatrixPosition { x: 0, y: 0})
         .insert_resource(0_i16)
-        .add_event::<SpawnEvent>()
+        .add_event::<LockEvent>()
         .add_startup_system(setup)
         .add_system(spawn)
         .add_system(input.after(spawn))
@@ -46,7 +46,7 @@ fn main() {
     ;
 }
 
-fn setup(mut commands: Commands, mut spawn_notify: EventWriter<SpawnEvent>) {
+fn setup(mut commands: Commands, mut lock_notify: EventWriter<LockEvent>) {
     commands.spawn_bundle(Camera2dBundle::default());
 
     let matrix = Matrix {
@@ -73,7 +73,7 @@ fn setup(mut commands: Commands, mut spawn_notify: EventWriter<SpawnEvent>) {
         .insert(matrix)
     ;
 
-    spawn_notify.send(SpawnEvent);
+    lock_notify.send(LockEvent);
 }
 
 fn update_sprites(
