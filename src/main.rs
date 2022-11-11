@@ -16,7 +16,7 @@ use movement::{
 use rotation::rotation;
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{LockEvent, spawn};
-use heap::HeapEntry;
+use heap::{HeapEntry, lock};
 use processing::processing;
 use input::{KeyActions, input};
 
@@ -42,6 +42,7 @@ fn main() {
         .add_system(rotation.after(movement))
         .add_system(processing.after(rotation))
         .add_system(update_sprites.after(processing))
+        .add_system(lock.after(update_sprites))
         .run()
     ;
 }

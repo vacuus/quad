@@ -28,3 +28,9 @@ impl Borrow<MatrixPosition> for &Mut<'_, MatrixPosition> {
         &*self
     }
 }
+
+impl Borrow<MatrixPosition> for &&MatrixPosition {
+    fn borrow(&self) -> &MatrixPosition {
+        *self
+    }
+}
