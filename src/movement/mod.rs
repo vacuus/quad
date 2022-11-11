@@ -1,9 +1,10 @@
 mod types;
 
 use bevy::prelude::*;
+use ::core::borrow::Borrow;
 use crate::grid::{GridSize, GridPos};
 use crate::heap::HeapEntry;
-use crate::tetromino::TetrominoBlock;
+use crate::spawn::Block;
 use crate::input::{KeyAction, KeyActions};
 pub use self::types::*;
 
@@ -17,17 +18,17 @@ pub fn movement(
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
     mut move_y_timer: ResMut<MovementYTimer>,
-    mut tetromino_pos: Query<&mut GridPos, With<TetrominoBlock>>,
+    mut block_pos: Query<&mut GridPos, With<Block>>,
 ) {
     // each block of the tetromino has, appropriately, the `Tetromino` component
-    let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
+    let mut block_pos = block_pos.iter_mut().collect::<Vec<_>>();
 
     let grid_width = grid_size.width;
 
     // hard drop
     if keyboard_input.get_action_state(KeyAction::HardDropJustPressed) {
-        while can_move(&tetromino_pos, grid_width, MoveY::Down1, &heap) {
-            tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
+        while can_move(&block_pos, grid_width, MoveY::Down1, &heap) {
+            block_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
         return;
     }
@@ -75,13 +76,13 @@ pub fn movement(
     }
 
     // check if movement is legal
-    if !can_move(&tetromino_pos, grid_width, move_x, &heap) {
+    if !can_move(&block_pos, grid_width, move_x, &heap) {
         move_x.set_neutral();
     }
-    if !can_move(&tetromino_pos, grid_width, move_y, &heap) {
+    if !can_move(&block_pos, grid_width, move_y, &heap) {
         move_y.move_up();
         if move_y == MoveY::Down1
-            && !can_move(&tetromino_pos, grid_width, MoveY::Down1, &heap)
+            && !can_move(&block_pos, grid_width, MoveY::Down1, &heap)
         {
             move_y.set_neutral();
         }
@@ -89,16 +90,12 @@ pub fn movement(
 
     let offset = (move_x, move_y).to_offset();
     // apply movement
-    tetromino_pos.iter_mut().for_each(|pos| { **pos += offset; });
+    block_pos.iter_mut().for_each(|pos| { **pos += offset; });
     *origin += offset;
 }
 
-
-use ::core::borrow::Borrow;
-
-
 pub fn can_move<Pos, Mov>(
-    tetromino_pos: impl IntoIterator<Item = Pos>,
+    block_pos: impl IntoIterator<Item = Pos>,
     grid_width: i16,
     movement: Mov,
     heap: &Vec<HeapEntry>,
@@ -109,7 +106,7 @@ where
 {
     let offset = <Mov as MoveOffset>::to_offset(&movement);
 
-    tetromino_pos
+    block_pos
         .into_iter()
         .map(|pos| *<Pos as Borrow<GridPos>>::borrow(&pos))
         .all(|mut pos| {

@@ -1,6 +1,6 @@
 mod movement;
 mod grid;
-mod tetromino;
+mod spawn;
 mod rotation;
 mod heap;
 mod input;
@@ -14,7 +14,7 @@ use movement::{
 };
 use rotation::rotation;
 use grid::{GridSize, GridPos};
-use tetromino::{SpawnEvent, spawn};
+use spawn::{SpawnEvent, spawn};
 use heap::{HeapEntry, lock};
 use input::{KeyActions, input};
 
