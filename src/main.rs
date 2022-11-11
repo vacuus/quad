@@ -15,7 +15,7 @@ use movement::{
 };
 use rotation::rotation;
 use matrix::{Matrix, MatrixPosition};
-use tetromino::spawn_tetromino;
+use tetromino::{SpawnEvent, spawn};
 use heap::HeapEntry;
 use processing::processing;
 use kb_input::{KeyActions, keyboard_input};
@@ -33,8 +33,11 @@ fn main() {
         .insert_resource(MovementYTimer::new())
         .insert_resource(KeyActions::new())
         .insert_resource(MatrixPosition { x: 0, y: 0})
+        .insert_resource(0_i16)
+        .add_event::<SpawnEvent>()
         .add_startup_system(setup)
-        .add_system(keyboard_input)
+        .add_system(spawn)
+        .add_system(keyboard_input.after(spawn))
         .add_system(movement.after(keyboard_input))
         .add_system(rotation.after(movement))
         .add_system(processing.after(rotation))
@@ -43,7 +46,7 @@ fn main() {
     ;
 }
 
-fn setup(mut commands: Commands, mut origin: ResMut<MatrixPosition>) {
+fn setup(mut commands: Commands, mut spawn_notify: EventWriter<SpawnEvent>) {
     commands.spawn_bundle(Camera2dBundle::default());
 
     let matrix = Matrix {
@@ -54,8 +57,6 @@ fn setup(mut commands: Commands, mut origin: ResMut<MatrixPosition>) {
     commands.insert_resource(
         vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize],
     );
-
-    spawn_tetromino(&mut commands, &matrix, &mut origin, 0);
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -71,6 +72,8 @@ fn setup(mut commands: Commands, mut origin: ResMut<MatrixPosition>) {
         })
         .insert(matrix)
     ;
+
+    spawn_notify.send(SpawnEvent);
 }
 
 fn update_sprites(

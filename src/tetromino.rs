@@ -38,14 +38,24 @@ pub const J_COLOR: Color = Color::rgb(0.9, 0.2, 0.0); // orange
 #[derive(Debug, Component)]
 pub struct TetrominoBlock;
 
+pub struct SpawnEvent;
 
-pub fn spawn_tetromino(
-    commands: &mut Commands,
-    matrix: &Matrix,
-    origin: &mut MatrixPosition,
-    max_y: i16,
+
+pub fn spawn(
+    mut commands: Commands,
+    max_y: Res<i16>,
+    mut origin: ResMut<MatrixPosition>,
+    spawn_update: EventReader<SpawnEvent>,
+    matrix: Query<&Matrix>,
 ) {
-    assert!(matrix.height - 2 > max_y, "Player has lost");
+    if spawn_update.is_empty() {
+        return;
+    }
+    spawn_update.clear();
+
+    let matrix = matrix.single();
+
+    assert!(matrix.height - 2 > *max_y, "Player has lost");
 
     let tetromino_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
     let (positions, rotation_origin, color) = match tetromino_variant_idx {

@@ -1,14 +1,15 @@
 use bevy::prelude::*;
 use crate::movement::{MoveY, can_move};
 use crate::heap::{HeapEntry, add_tetromino_to_heap};
-use crate::tetromino::{TetrominoBlock, spawn_tetromino};
+use crate::tetromino::{TetrominoBlock, SpawnEvent};
 use crate::matrix::{Matrix, MatrixPosition};
 
 
 pub fn processing(
     mut commands: Commands,
+    mut max_y: ResMut<i16>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    mut origin: ResMut<MatrixPosition>,
+    mut spawn_notify: EventWriter<SpawnEvent>,
     matrix: Query<&Matrix>,
     tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
 ) {
@@ -21,7 +22,7 @@ pub fn processing(
     if !can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
         // if this is the new highest y value on the heap, then the player
         // may lose (in the case that a new piece can't be spawned)
-        let max_y = tetromino_pos
+        *max_y = tetromino_pos
             .iter()
             .map(|pos: &MatrixPosition| pos.y)
             .max()
@@ -34,6 +35,6 @@ pub fn processing(
             &tetromino_ents,
             &tetromino_pos,
         );
-        spawn_tetromino(&mut commands, &matrix, &mut origin, max_y);
+        spawn_notify.send(SpawnEvent);
     }
 }
