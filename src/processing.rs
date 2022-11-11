@@ -19,6 +19,14 @@ pub fn processing(
     let matrix = matrix.single();
 
     if !can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
+        // if this is the new highest y value on the heap, then the player
+        // may lose (in the case that a new piece can't be spawned)
+        let max_y = tetromino_pos
+            .iter()
+            .map(|pos: &MatrixPosition| pos.y)
+            .max()
+            .unwrap()
+        ;
         add_tetromino_to_heap(
             &mut commands,
             &matrix,
@@ -26,6 +34,6 @@ pub fn processing(
             &tetromino_ents,
             &tetromino_pos,
         );
-        spawn_tetromino(&mut commands, &matrix, &mut origin);
+        spawn_tetromino(&mut commands, &matrix, &mut origin, max_y);
     }
 }

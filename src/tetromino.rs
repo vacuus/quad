@@ -43,7 +43,10 @@ pub fn spawn_tetromino(
     commands: &mut Commands,
     matrix: &Matrix,
     origin: &mut MatrixPosition,
+    max_y: i16,
 ) {
+    assert!(matrix.height - 2 > max_y, "Player has lost");
+
     let tetromino_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
     let (positions, rotation_origin, color) = match tetromino_variant_idx {
         0 => (I, I_ORIGIN, I_COLOR),

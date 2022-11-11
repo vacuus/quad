@@ -55,7 +55,7 @@ fn setup(mut commands: Commands, mut origin: ResMut<MatrixPosition>) {
         vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize],
     );
 
-    spawn_tetromino(&mut commands, &matrix, &mut origin);
+    spawn_tetromino(&mut commands, &matrix, &mut origin, 0);
 
     commands
         .spawn_bundle(SpriteBundle {
