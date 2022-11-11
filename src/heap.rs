@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
-use crate::tetromino::{TetrominoBlock, LockEvent};
+use crate::tetromino::{TetrominoBlock, SpawnEvent};
 use crate::movement::{MoveY, can_move};
 
 
@@ -15,7 +15,7 @@ pub fn lock(
     mut commands: Commands,
     mut max_y: ResMut<i16>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    mut lock_notify: EventWriter<LockEvent>,
+    mut spawn_notify: EventWriter<SpawnEvent>,
     matrix: Query<&Matrix>,
     tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
 ) {
@@ -31,7 +31,7 @@ pub fn lock(
     // if this is the new highest y value on the heap, then the player
     // may lose (in the case that a new piece can't be spawned)
     *max_y = tetromino_pos.iter().map(|pos| pos.y).max().unwrap();
-    lock_notify.send(LockEvent);
+    spawn_notify.send(SpawnEvent);
 
     let matrix_width = matrix.width;
 
