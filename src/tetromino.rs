@@ -13,8 +13,8 @@ pub const O: [(i16, i16); 4]  = [(0, 0), (0, 1), (1, 0), (1, 1)];
 pub const O_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 1};
 pub const O_COLOR: Color = Color::rgb(0.7, 0.7, 0.0); // yellow
 
-pub const T: [(i16, i16); 4]  = [(0, 1), (1, 1), (2, 1), (1, 2)];
-pub const T_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 1};
+pub const T: [(i16, i16); 4]  = [(0, 0), (1, 0), (2, 0), (1, 1)];
+pub const T_ORIGIN: MatrixPosition = MatrixPosition { x: 1, y: 0};
 pub const T_COLOR: Color = Color::rgb(0.7, 0.0, 0.7); // purple
 
 pub const Z: [(i16, i16); 4]  = [(0, 1), (1, 1), (1, 0), (2, 0)];
@@ -57,14 +57,16 @@ pub fn spawn_tetromino(
 //         unimplemented: other variants
     };
 
+    let shift_x = matrix.width / 2 - 1;
+    let shift_y = matrix.height - 2;
+
     *origin = rotation_origin;
-    origin.x += 3;
-    origin.y += matrix.height - 4;
+    origin.x += shift_x;
+    origin.y += shift_y;
 
     for (x, y) in positions {
-        let x = x + 3;
-        // fix
-        let y = matrix.height - 4 + y;
+        let x = x + shift_x;
+        let y = y + shift_y;
 
         commands
             .spawn_bundle(SpriteBundle {
