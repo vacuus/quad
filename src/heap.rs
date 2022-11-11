@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::matrix::{Matrix, MatrixPosition};
+use crate::grid::{GridSize, GridPos};
 use crate::tetromino::{TetrominoBlock, SpawnEvent};
 use crate::movement::{MoveY, can_move};
 
@@ -13,18 +13,17 @@ pub enum HeapEntry {
 
 pub fn lock(
     mut commands: Commands,
+    grid_size: Res<GridSize>,
     mut max_y: ResMut<i16>,
     mut heap: ResMut<Vec<HeapEntry>>,
     mut spawn_notify: EventWriter<SpawnEvent>,
-    matrix: Query<&Matrix>,
-    tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
+    tetromino: Query<(Entity, &GridPos), With<TetrominoBlock>>,
 ) {
-    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<&MatrixPosition>) =
+    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<&GridPos>) =
         tetromino.iter().unzip()
     ;
-    let matrix = matrix.single();
 
-    if can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
+    if can_move(&tetromino_pos, &grid_size, MoveY::Down1, &heap) {
         return;
     }
 
@@ -33,7 +32,7 @@ pub fn lock(
     *max_y = tetromino_pos.iter().map(|pos| pos.y).max().unwrap();
     spawn_notify.send(SpawnEvent);
 
-    let matrix_width = matrix.width;
+    let matrix_width = grid_size.width;
 
     tetromino_ents
         .into_iter()
@@ -43,7 +42,7 @@ pub fn lock(
     ;
     tetromino_pos
         .into_iter()
-        .for_each(|pos: &MatrixPosition| {
+        .for_each(|pos: &GridPos| {
             // mark position in heap as occupied
             heap[(pos.x + pos.y * matrix_width) as usize] = HeapEntry::Occupied;
         })

@@ -1,7 +1,7 @@
 mod types;
 
 use bevy::prelude::*;
-use crate::matrix::{Matrix, MatrixPosition};
+use crate::grid::{GridSize, GridPos};
 use crate::heap::HeapEntry;
 use crate::tetromino::TetrominoBlock;
 use crate::input::{KeyAction, KeyActions};
@@ -11,21 +11,20 @@ pub use self::types::*;
 pub fn movement(
     time: Res<Time>,
     heap: Res<Vec<HeapEntry>>,
+    grid_size: Res<GridSize>,
     keyboard_input: Res<KeyActions>,
-    mut origin: ResMut<MatrixPosition>,
+    mut origin: ResMut<GridPos>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
     mut move_y_timer: ResMut<MovementYTimer>,
-    matrix: Query<&Matrix>,
-    mut tetromino_pos: Query<&mut MatrixPosition, With<TetrominoBlock>>,
+    mut tetromino_pos: Query<&mut GridPos, With<TetrominoBlock>>,
 ) {
     // each block of the tetromino has, appropriately, the `Tetromino` component
     let mut tetromino_pos = tetromino_pos.iter_mut().collect::<Vec<_>>();
-    let matrix = matrix.single();
 
     // hard drop
     if keyboard_input.get_action_state(KeyAction::HardDropJustPressed) {
-        while can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
+        while can_move(&tetromino_pos, &grid_size, MoveY::Down1, &heap) {
             tetromino_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
         return;
@@ -74,13 +73,13 @@ pub fn movement(
     }
 
     // check if movement is legal
-    if !can_move(&tetromino_pos, &matrix, move_x, &heap) {
+    if !can_move(&tetromino_pos, &grid_size, move_x, &heap) {
         move_x.set_neutral();
     }
-    if !can_move(&tetromino_pos, &matrix, move_y, &heap) {
+    if !can_move(&tetromino_pos, &grid_size, move_y, &heap) {
         move_y.move_up();
         if move_y == MoveY::Down1
-            && !can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap)
+            && !can_move(&tetromino_pos, &grid_size, MoveY::Down1, &heap)
         {
             move_y.set_neutral();
         }
@@ -98,27 +97,27 @@ use ::core::borrow::Borrow;
 
 pub fn can_move<Pos, Mov>(
     tetromino_pos: impl IntoIterator<Item = Pos>,
-    matrix: &Matrix,
+    grid_size: &GridSize,
     movement: Mov,
     heap: &Vec<HeapEntry>,
 ) -> bool
 where
-    Pos: Borrow<MatrixPosition>,
+    Pos: Borrow<GridPos>,
     Mov: MoveOffset,
 {
     let offset = <Mov as MoveOffset>::to_offset(&movement);
 
     tetromino_pos
         .into_iter()
-        .map(|pos| *<Pos as Borrow<MatrixPosition>>::borrow(&pos))
+        .map(|pos| *<Pos as Borrow<GridPos>>::borrow(&pos))
         .all(|mut pos| {
             // get neighboring position in relevant direction
             pos += offset;
 
             // invalid `x` or `y` will still likely produce a valid index into
             // `heap`; the index is only accurate if `x` and `y` are in bounds
-            (pos.x >= 0) & (pos.x < matrix.width) & (pos.y >= 0)
-                && match heap.get((pos.x + pos.y * matrix.width) as usize)
+            (pos.x >= 0) & (pos.x < grid_size.width) & (pos.y >= 0)
+                && match heap.get((pos.x + pos.y * grid_size.width) as usize)
             {
                 Some(HeapEntry::Vacant) => true,
                 _ => false,

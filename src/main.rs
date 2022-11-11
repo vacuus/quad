@@ -1,5 +1,5 @@
 mod movement;
-mod matrix;
+mod grid;
 mod tetromino;
 mod rotation;
 mod heap;
@@ -13,7 +13,7 @@ use movement::{
     movement,
 };
 use rotation::rotation;
-use matrix::{Matrix, MatrixPosition};
+use grid::{GridSize, GridPos};
 use tetromino::{SpawnEvent, spawn};
 use heap::{HeapEntry, lock};
 use input::{KeyActions, input};
@@ -30,7 +30,10 @@ fn main() {
         .insert_resource(MovementXTimer::new())
         .insert_resource(MovementYTimer::new())
         .insert_resource(KeyActions::new())
-        .insert_resource(MatrixPosition { x: 0, y: 0})
+        // make this extensible
+        .insert_resource(GridSize { width: 10, height: 25 })
+        .insert_resource(GridPos { x: 0, y: 0})
+        // placeholder for max_y
         .insert_resource(0_i16)
         .add_event::<SpawnEvent>()
         .add_startup_system(setup)
@@ -44,48 +47,44 @@ fn main() {
     ;
 }
 
-fn setup(mut commands: Commands, mut spawn_notify: EventWriter<SpawnEvent>) {
+fn setup(
+    mut commands: Commands,
+    grid_size: Res<GridSize>,
+    mut spawn_notify: EventWriter<SpawnEvent>,
+) {
     commands.spawn_bundle(Camera2dBundle::default());
 
-    let matrix = Matrix {
-        width: 15,
-        height: 25,
-    };
-
     commands.insert_resource(
-        vec![HeapEntry::Vacant; (matrix.width * matrix.height) as usize],
+        vec![HeapEntry::Vacant; (grid_size.width * grid_size.height) as usize],
     );
 
     commands
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(
-                    matrix.width as f32 * BLOCK_SIZE,
-                    matrix.height as f32 * BLOCK_SIZE,
+                    grid_size.width as f32 * BLOCK_SIZE,
+                    grid_size.height as f32 * BLOCK_SIZE,
                 )),
                 color: Color::rgb(0.0, 0.0, 0.0),
                 ..Sprite::default()
             },
             ..SpriteBundle::default()
         })
-        .insert(matrix)
     ;
 
     spawn_notify.send(SpawnEvent);
 }
 
 fn update_sprites(
-    matrix: Query<&Matrix>,
-    mut block: Query<(&MatrixPosition, &mut Transform)>,
+    grid_size: Res<GridSize>,
+    mut block: Query<(&GridPos, &mut Transform)>,
 ) {
-    let matrix = matrix.single();
-
     for (position, mut transform) in block.iter_mut() {
         transform.translation.x = BLOCK_SIZE *
-            (position.x as f32 - matrix.width as f32 * 0.5 + 0.5)
+            (position.x as f32 - grid_size.width as f32 * 0.5 + 0.5)
         ;
         transform.translation.y = BLOCK_SIZE *
-            (position.y as f32 - matrix.height as f32 * 0.5 + 0.5)
+            (position.y as f32 - grid_size.height as f32 * 0.5 + 0.5)
         ;
     }
 }
