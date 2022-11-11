@@ -3,7 +3,7 @@ use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::TetrominoBlock;
 use crate::movement::{MoveNeutral, can_move};
 use crate::heap::HeapEntry;
-use crate::kb_input::{KeyAction, KeyActions};
+use crate::input::{KeyAction, KeyActions};
 use ::core::iter;
 
 

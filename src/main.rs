@@ -4,7 +4,7 @@ mod tetromino;
 mod rotation;
 mod heap;
 mod processing;
-mod kb_input;
+mod input;
 
 use bevy::prelude::*;
 use movement::{
@@ -18,7 +18,7 @@ use matrix::{Matrix, MatrixPosition};
 use tetromino::{SpawnEvent, spawn};
 use heap::HeapEntry;
 use processing::processing;
-use kb_input::{KeyActions, keyboard_input};
+use input::{KeyActions, input};
 
 
 // pixel (?) width of a block
@@ -37,8 +37,8 @@ fn main() {
         .add_event::<SpawnEvent>()
         .add_startup_system(setup)
         .add_system(spawn)
-        .add_system(keyboard_input.after(spawn))
-        .add_system(movement.after(keyboard_input))
+        .add_system(input.after(spawn))
+        .add_system(movement.after(input))
         .add_system(rotation.after(movement))
         .add_system(processing.after(rotation))
         .add_system(update_sprites.after(processing))

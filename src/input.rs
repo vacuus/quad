@@ -46,7 +46,7 @@ impl KeyActions {
 }
 
 
-pub fn keyboard_input(
+pub fn input(
     mut key_actions: ResMut<KeyActions>,
     mut key_events: EventReader<KeyboardInput>,
 ) {

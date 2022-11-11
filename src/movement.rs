@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::heap::HeapEntry;
 use crate::tetromino::TetrominoBlock;
-use crate::kb_input::{KeyAction, KeyActions};
+use crate::input::{KeyAction, KeyActions};
 pub use self::types::*;
 
 
