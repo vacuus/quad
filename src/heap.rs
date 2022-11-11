@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::tetromino::{TetrominoBlock, LockEvent};
+use crate::movement::{MoveY, can_move};
 
 
 #[derive(Clone)]
@@ -12,30 +13,36 @@ pub enum HeapEntry {
 
 pub fn lock(
     mut commands: Commands,
+    mut max_y: ResMut<i16>,
     mut heap: ResMut<Vec<HeapEntry>>,
-    lock_update: EventReader<LockEvent>,
+    mut lock_notify: EventWriter<LockEvent>,
     matrix: Query<&Matrix>,
     tetromino: Query<(Entity, &MatrixPosition), With<TetrominoBlock>>,
 ) {
-    if lock_update.is_empty() {
+    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<&MatrixPosition>) =
+        tetromino.iter().unzip()
+    ;
+    let matrix = matrix.single();
+
+    if can_move(&tetromino_pos, &matrix, MoveY::Down1, &heap) {
         return;
     }
-    lock_update.clear();
 
-    let (tetromino_ents, tetromino_pos): (Vec<_>, Vec<_>) = tetromino
-        .iter()
-        .unzip()
-    ;
-    let matrix_width = matrix.single().width;
+    // if this is the new highest y value on the heap, then the player
+    // may lose (in the case that a new piece can't be spawned)
+    *max_y = tetromino_pos.iter().map(|pos| pos.y).max().unwrap();
+    lock_notify.send(LockEvent);
+
+    let matrix_width = matrix.width;
 
     tetromino_ents
-        .iter()
-        .for_each(|&entity| {
+        .into_iter()
+        .for_each(|entity| {
             commands.entity(entity).remove::<TetrominoBlock>();
         })
     ;
     tetromino_pos
-        .iter()
+        .into_iter()
         .for_each(|pos: &MatrixPosition| {
             // mark position in heap as occupied
             heap[(pos.x + pos.y * matrix_width) as usize] = HeapEntry::Occupied;

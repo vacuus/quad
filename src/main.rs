@@ -3,7 +3,6 @@ mod matrix;
 mod tetromino;
 mod rotation;
 mod heap;
-mod processing;
 mod input;
 
 use bevy::prelude::*;
@@ -17,7 +16,6 @@ use rotation::rotation;
 use matrix::{Matrix, MatrixPosition};
 use tetromino::{LockEvent, spawn};
 use heap::{HeapEntry, lock};
-use processing::processing;
 use input::{KeyActions, input};
 
 
@@ -40,9 +38,8 @@ fn main() {
         .add_system(input.after(spawn))
         .add_system(movement.after(input))
         .add_system(rotation.after(movement))
-        .add_system(processing.after(rotation))
-        .add_system(update_sprites.after(processing))
-        .add_system(lock.after(update_sprites))
+        .add_system(lock.after(rotation))
+        .add_system(update_sprites.after(lock))
         .run()
     ;
 }
