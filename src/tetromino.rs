@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::app::AppExit;
 use rand::Rng;
 use crate::matrix::{Matrix, MatrixPosition};
 use crate::BLOCK_SIZE;
@@ -47,6 +48,7 @@ pub fn spawn(
     max_y: Res<i16>,
     mut origin: ResMut<MatrixPosition>,
     spawn_update: EventReader<SpawnEvent>,
+    mut app_exit_notify: EventWriter<AppExit>,
     matrix: Query<&Matrix>,
 ) {
     if spawn_update.is_empty() {
@@ -56,7 +58,10 @@ pub fn spawn(
 
     let matrix = matrix.single();
 
-    assert!(matrix.height - 2 > *max_y, "Player has lost");
+    if *max_y >= matrix.height - 2 {
+        eprintln!("You lost");
+        app_exit_notify.send(AppExit);
+    }
 
     let tetromino_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
     let (positions, rotation_origin, color) = match tetromino_variant_idx {
