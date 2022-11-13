@@ -21,6 +21,7 @@ impl KeyAction {
     }
 }
 
+#[derive(Resource)]
 pub struct KeyActions {
     bitflags: u16,
 }

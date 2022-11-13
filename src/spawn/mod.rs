@@ -15,10 +15,15 @@ pub struct Block;
 // the current piece has been locked, and a new piece will be spawned
 pub struct SpawnEvent;
 
+#[derive(Resource)]
+pub struct MaxY {
+    pub val: i16,
+}
+
 
 pub fn spawn(
     mut commands: Commands,
-    max_y: Res<i16>,
+    max_y: Res<MaxY>,
     grid_size: Res<GridSize>,
     mut origin: ResMut<GridPos>,
     spawn_update: EventReader<SpawnEvent>,
@@ -29,7 +34,7 @@ pub fn spawn(
     }
     spawn_update.clear();
 
-    if *max_y >= grid_size.height - 2 {
+    if max_y.val >= grid_size.height - 2 {
         eprintln!("You lost");
         app_exit_notify.send(AppExit);
     }
@@ -59,19 +64,25 @@ pub fn spawn(
         let y = y + shift_y;
 
         commands
-            .spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(Vec2::splat(BLOCK_SIZE)),
-                    color,
-                    ..Sprite::default()
+            .spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::splat(BLOCK_SIZE)),
+                        color,
+                        ..Sprite::default()
+                    },
+                    transform: Transform::from_translation(
+                        Vec3::new(
+                            x as f32 * BLOCK_SIZE,
+                            y as f32 * BLOCK_SIZE,
+                            1.0,
+                        ),
+                    ),
+                    ..SpriteBundle::default()
                 },
-                transform: Transform::from_translation(
-                    Vec3::new(x as f32 * BLOCK_SIZE, y as f32 * BLOCK_SIZE, 1.0)
-                ),
-                ..SpriteBundle::default()
-            })
-            .insert(GridPos { x, y })
-            .insert(Block)
+                GridPos { x, y },
+                Block,
+            ))
         ;
     }
 }

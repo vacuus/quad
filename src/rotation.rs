@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crate::grid::{GridSize, GridPos};
 use crate::spawn::Block;
 use crate::movement::{MoveNeutral, can_move};
-use crate::heap::HeapEntry;
+use crate::heap::Heap;
 use crate::input::{KeyAction, KeyActions};
 use ::core::iter;
 
@@ -15,7 +15,7 @@ pub enum Rotate {
 
 
 pub fn rotation(
-    heap: Res<Vec<HeapEntry>>,
+    heap: Res<Heap>,
     grid_size: Res<GridSize>,
     origin: Res<GridPos>,
     keyboard_input: Res<KeyActions>,

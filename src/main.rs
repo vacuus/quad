@@ -14,8 +14,8 @@ use movement::{
 };
 use rotation::rotation;
 use grid::{GridSize, GridPos};
-use spawn::{SpawnEvent, spawn};
-use heap::{HeapEntry, lock};
+use spawn::{SpawnEvent, MaxY, spawn};
+use heap::{HeapEntry, Heap, lock};
 use input::{KeyActions, input};
 
 
@@ -33,8 +33,8 @@ fn main() {
         // make this extensible
         .insert_resource(GridSize { width: 15, height: 25 })
         .insert_resource(GridPos { x: 0, y: 0})
-        // placeholder for max_y
-        .insert_resource(0_i16)
+        // placeholder value
+        .insert_resource(MaxY { val: 0})
         .add_event::<SpawnEvent>()
         .add_startup_system(setup)
         .add_system(spawn)
@@ -52,14 +52,20 @@ fn setup(
     grid_size: Res<GridSize>,
     mut spawn_notify: EventWriter<SpawnEvent>,
 ) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
 
-    commands.insert_resource(
-        vec![HeapEntry::Vacant; (grid_size.width * grid_size.height) as usize],
-    );
+    let heap = vec![
+        HeapEntry::Vacant;
+        (grid_size.width * grid_size.height) as usize
+    ];
+    let heap = Heap {
+        blocks: heap,
+    };
+    commands.insert_resource(heap);
 
     commands
-        .spawn_bundle(SpriteBundle {
+        // grid
+        .spawn(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(
                     grid_size.width as f32 * BLOCK_SIZE,
@@ -69,6 +75,23 @@ fn setup(
                 ..Sprite::default()
             },
             ..SpriteBundle::default()
+        })
+        // area above the grid where pieces spawn
+        .with_children(|parent| {
+            parent
+                .spawn(SpriteBundle {
+                    transform: Transform::from_xyz(0.0, -10.0, 0.0),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(
+                            grid_size.width as f32 * BLOCK_SIZE,
+                            3 as f32 * BLOCK_SIZE,
+                        )),
+                        color: Color::rgba(1.0, 1.0, 1.0, 1.0),
+                        ..Sprite::default()
+                    },
+                    ..SpriteBundle::default()
+                })
+            ;
         })
     ;
 

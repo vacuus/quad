@@ -3,7 +3,7 @@ mod types;
 use bevy::prelude::*;
 use ::core::borrow::Borrow;
 use crate::grid::{GridSize, GridPos};
-use crate::heap::HeapEntry;
+use crate::heap::{HeapEntry, Heap};
 use crate::spawn::Block;
 use crate::input::{KeyAction, KeyActions};
 pub use self::types::*;
@@ -11,7 +11,7 @@ pub use self::types::*;
 
 pub fn movement(
     time: Res<Time>,
-    heap: Res<Vec<HeapEntry>>,
+    heap: Res<Heap>,
     grid_size: Res<GridSize>,
     keyboard_input: Res<KeyActions>,
     mut origin: ResMut<GridPos>,
@@ -98,12 +98,13 @@ pub fn can_move<Pos, Mov>(
     block_pos: impl IntoIterator<Item = Pos>,
     grid_width: i16,
     movement: Mov,
-    heap: &Vec<HeapEntry>,
+    heap: &Heap,
 ) -> bool
 where
     Pos: Borrow<GridPos>,
     Mov: MoveOffset,
 {
+    let heap = &heap.blocks;
     let offset = <Mov as MoveOffset>::to_offset(&movement);
 
     block_pos

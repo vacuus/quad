@@ -1,16 +1,16 @@
-use bevy::time::Timer;
-use bevy::prelude::{Deref, DerefMut};
+use bevy::time::{Timer, TimerMode};
+use bevy::prelude::{Deref, DerefMut, Resource};
 
 
 // Newtype wrapper around a `Timer`
 macro_rules! timer {
     ($ty:ident, $duration:literal) => {
-        #[derive(Deref, DerefMut)]
+        #[derive(Deref, DerefMut, Resource)]
         pub struct $ty(Timer);
 
         impl $ty {
             pub fn new() -> Self {
-                Self(Timer::from_seconds($duration, false))
+                Self(Timer::from_seconds($duration, TimerMode::Once))
             }
         }
     }

@@ -1,8 +1,13 @@
 use bevy::prelude::*;
 use crate::grid::{GridSize, GridPos};
-use crate::spawn::{Block, SpawnEvent};
+use crate::spawn::{Block, MaxY, SpawnEvent};
 use crate::movement::{MoveY, can_move};
 
+
+#[derive(Resource)]
+pub struct Heap {
+    pub blocks: Vec<HeapEntry>,
+}
 
 #[derive(Clone)]
 pub enum HeapEntry {
@@ -14,8 +19,8 @@ pub enum HeapEntry {
 pub fn lock(
     mut commands: Commands,
     grid_size: Res<GridSize>,
-    mut max_y: ResMut<i16>,
-    mut heap: ResMut<Vec<HeapEntry>>,
+    mut max_y: ResMut<MaxY>,
+    mut heap: ResMut<Heap>,
     mut spawn_notify: EventWriter<SpawnEvent>,
     tetromino: Query<(Entity, &GridPos), With<Block>>,
 ) {
@@ -31,7 +36,7 @@ pub fn lock(
 
     // if this is the new highest y value on the heap, then the player
     // may lose (in the case that a new piece can't be spawned)
-    *max_y = block_pos.iter().map(|pos| pos.y).max().unwrap();
+    max_y.val = block_pos.iter().map(|pos| pos.y).max().unwrap();
     spawn_notify.send(SpawnEvent);
 
     block_entities
@@ -43,8 +48,9 @@ pub fn lock(
     block_pos
         .into_iter()
         .for_each(|pos: &GridPos| {
+            let idx = pos.x + pos.y * grid_width;
             // mark position in heap as occupied
-            heap[(pos.x + pos.y * grid_width) as usize] = HeapEntry::Occupied;
+            heap.blocks[idx as usize] = HeapEntry::Occupied;
         })
     ;
 }

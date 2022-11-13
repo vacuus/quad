@@ -1,16 +1,16 @@
-use bevy::ecs::{world::Mut, component::Component};
+use bevy::ecs::{world::Mut, component::Component, system::Resource};
 use ::core::ops::AddAssign;
 use ::core::borrow::Borrow;
 
 
-#[derive(Component)]
+#[derive(Component, Resource)]
 pub struct GridSize {
     pub width: i16,
     pub height: i16,
 }
 
 // Holds a block's position within a tetromino for rotation
-#[derive(Debug, Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component, Resource)]
 pub struct GridPos {
     pub x: i16,
     pub y: i16,
