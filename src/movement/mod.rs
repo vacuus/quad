@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use ::core::borrow::Borrow;
 use crate::grid::{GridSize, GridPos};
 use crate::heap::{HeapEntry, Heap};
-use crate::piece::Block;
+use crate::piece::{Block, Origin};
 use crate::input::{KeyAction, KeyActions};
 pub use self::types::*;
 
@@ -14,13 +14,13 @@ pub fn movement(
     heap: Res<Heap>,
     grid_size: Res<GridSize>,
     keyboard_input: Res<KeyActions>,
-    mut origin: ResMut<GridPos>,
+    mut origin: ResMut<Origin>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
     mut move_y_timer: ResMut<MovementYTimer>,
     mut block_pos: Query<&mut GridPos, With<Block>>,
 ) {
-    // each block of the tetromino has, appropriately, the `Tetromino` component
+    // each block of the piece has, appropriately, the `Block` component
     let mut block_pos = block_pos.iter_mut().collect::<Vec<_>>();
 
     let grid_width = grid_size.width;
@@ -71,7 +71,7 @@ pub fn movement(
     // gravity
     gravity_timer.tick(time.delta());
     if gravity_timer.just_finished() {
-        move_y.move_down();
+//         move_y.move_down();
         gravity_timer.reset();
     }
 
@@ -91,7 +91,7 @@ pub fn movement(
     let offset = (move_x, move_y).to_offset();
     // apply movement
     block_pos.iter_mut().for_each(|pos| { **pos += offset; });
-    *origin += offset;
+    origin.pos += offset;
 }
 
 pub fn can_move<Pos, Mov>(

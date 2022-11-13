@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::grid::{GridSize, GridPos};
-use crate::piece::Block;
+use crate::piece::{Block, Origin, OriginMode};
 use crate::movement::{MoveNeutral, can_move};
 use crate::heap::Heap;
 use crate::input::{KeyAction, KeyActions};
@@ -17,7 +17,7 @@ pub enum Rotate {
 pub fn rotation(
     heap: Res<Heap>,
     grid_size: Res<GridSize>,
-    origin: Res<GridPos>,
+    origin: Res<Origin>,
     keyboard_input: Res<KeyActions>,
     mut block_pos: Query<&mut GridPos, With<Block>>,
 ) {
@@ -60,21 +60,39 @@ pub fn rotation(
 fn basic_rotation(
     block_pos: &mut Vec<Mut<GridPos>>,
     rotate: Rotate,
-    origin: GridPos,
+    origin: Origin
 ) {
+    use OriginMode::*;
+
+
+    let origin_x = origin.pos.x;
+    let origin_y = origin.pos.y;
+
     for pos in block_pos {
-        let norm_x = pos.x - origin.x;
-        let norm_y = pos.y - origin.y;
         match rotate {
             Rotate::Clockwise => {
+                // normalize each position with respect to the origin
+                let (norm_x, norm_y) = match origin.mode {
+                    BlockCentered => (pos.x - origin_x, pos.y - origin_y),
+                    // use the bottom right corner of the grid cell, which
+                    // will be rotated "into" the proper (bottom left) corner
+                    PointCentered => (pos.x - origin_x + 1, pos.y - origin_y),
+                };
                 pos.x = norm_y;
                 pos.y = -norm_x;
             },
             Rotate::Counterclockwise => {
+                // normalize each position with respect to the origin
+                let (norm_x, norm_y) = match origin.mode {
+                    BlockCentered => (pos.x - origin_x, pos.y - origin_y),
+                    // use the top left corner of the grid cell, which
+                    // will be rotated "into" the proper (bottom left) corner
+                    PointCentered => (pos.x - origin_x, pos.y - origin_y + 1),
+                };
                 pos.x = -norm_y;
                 pos.y = norm_x;
             },
         }
-        **pos += (origin.x, origin.y);
+        **pos += (origin_x, origin_y);
     }
 }

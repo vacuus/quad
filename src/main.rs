@@ -14,7 +14,7 @@ use movement::{
 };
 use rotation::rotation;
 use grid::{GridSize, GridPos};
-use piece::{SpawnEvent, MaxY, spawn};
+use piece::{SpawnEvent, MaxY, Origin, OriginMode, spawn};
 use heap::{HeapEntry, Heap, lock};
 use input::{KeyActions, input};
 
@@ -32,7 +32,11 @@ fn main() {
         .insert_resource(KeyActions::new())
         // make this extensible
         .insert_resource(GridSize { width: 15, height: 25 })
-        .insert_resource(GridPos { x: 0, y: 0})
+        // placeholder value
+        .insert_resource(Origin {
+            pos: GridPos { x: 0, y: 0 },
+            mode: OriginMode::PointCentered,
+        })
         // placeholder value
         .insert_resource(MaxY { val: 0})
         .add_event::<SpawnEvent>()

@@ -20,12 +20,28 @@ pub struct MaxY {
     pub val: i16,
 }
 
+#[derive(Clone, Copy, Resource)]
+pub struct Origin {
+    pub pos: GridPos,
+    pub mode: OriginMode,
+}
+
+#[derive(Clone, Copy)]
+pub enum OriginMode {
+    // - the origin lies at an intersection of grid lines; the given position
+    // is of the grid cell that has the origin at its bottom left corner 
+    // - of the builtin pieces, I and O have such "point-centered" origins
+    PointCentered,
+    // the origin lies squarely on the grid cell given by the position
+    BlockCentered,
+}
+
 
 pub fn spawn(
     mut commands: Commands,
     max_y: Res<MaxY>,
     grid_size: Res<GridSize>,
-    mut origin: ResMut<GridPos>,
+    mut origin: ResMut<Origin>,
     spawn_update: EventReader<SpawnEvent>,
     mut app_exit_notify: EventWriter<AppExit>,
 ) {
@@ -53,15 +69,17 @@ pub fn spawn(
     };
 
     let shift_x = grid_size.width / 2 - 1;
-    let shift_y = grid_size.height - 2;
+    // let shift_y = grid_size.height - 2;
+    let shift_y = grid_size.height - 7;
 
-    *origin = rotation_origin;
-    origin.x += shift_x;
-    origin.y += shift_y;
+    origin.pos = rotation_origin.pos + (shift_x, shift_y);
+    origin.mode = rotation_origin.mode;
 
     for (x, y) in positions {
-        let x = x + shift_x;
-        let y = y + shift_y;
+        let pos = GridPos {
+            x: x + shift_x,
+            y: y + shift_y,
+        };
 
         commands
             .spawn((
@@ -80,8 +98,8 @@ pub fn spawn(
                     ),
                     ..SpriteBundle::default()
                 },
-                GridPos { x, y },
                 Block,
+                pos,
             ))
         ;
     }
