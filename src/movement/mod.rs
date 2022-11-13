@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use ::core::borrow::Borrow;
 use crate::grid::{GridSize, GridPos};
 use crate::heap::{HeapEntry, Heap};
-use crate::spawn::Block;
+use crate::piece::Block;
 use crate::input::{KeyAction, KeyActions};
 pub use self::types::*;
 

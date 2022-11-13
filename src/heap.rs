@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::grid::{GridSize, GridPos};
-use crate::spawn::{Block, MaxY, SpawnEvent};
+use crate::piece::{Block, MaxY, SpawnEvent};
 use crate::movement::{MoveY, can_move};
 
 

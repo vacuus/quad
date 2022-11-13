@@ -1,6 +1,6 @@
 mod movement;
 mod grid;
-mod spawn;
+mod piece;
 mod rotation;
 mod heap;
 mod input;
@@ -14,7 +14,7 @@ use movement::{
 };
 use rotation::rotation;
 use grid::{GridSize, GridPos};
-use spawn::{SpawnEvent, MaxY, spawn};
+use piece::{SpawnEvent, MaxY, spawn};
 use heap::{HeapEntry, Heap, lock};
 use input::{KeyActions, input};
 

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::grid::{GridSize, GridPos};
-use crate::spawn::Block;
+use crate::piece::Block;
 use crate::movement::{MoveNeutral, can_move};
 use crate::heap::Heap;
 use crate::input::{KeyAction, KeyActions};
