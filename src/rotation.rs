@@ -3,7 +3,7 @@ use crate::grid::{GridSize, GridPos};
 use crate::piece::{Block, Origin, OriginMode};
 use crate::movement::{MoveNeutral, can_move};
 use crate::heap::Heap;
-use crate::input::{KeyAction, KeyActions};
+use crate::input::{Input, Inputs};
 use ::core::iter;
 
 
@@ -18,14 +18,14 @@ pub fn rotation(
     heap: Res<Heap>,
     grid_size: Res<GridSize>,
     origin: Res<Origin>,
-    keyboard_input: Res<KeyActions>,
+    inputs: Res<Inputs>,
     mut block_pos: Query<&mut GridPos, With<Block>>,
 ) {
     let grid_width = grid_size.width;
 
     // get rotation input
-    let clkw = keyboard_input.get_action_state(KeyAction::ClkwJustPressed);
-    let cclw = keyboard_input.get_action_state(KeyAction::CclwJustPressed);
+    let clkw = inputs.get_action_state(Input::ClkwJustPressed);
+    let cclw = inputs.get_action_state(Input::CclwJustPressed);
     let rotate = match (clkw, cclw) {
         (true, true) | (false, false) => return,
         (true, false) => Rotate::Clockwise,

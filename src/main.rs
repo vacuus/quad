@@ -16,7 +16,7 @@ use rotation::rotation;
 use grid::{GridSize, GridPos};
 use piece::{SpawnEvent, Origin, OriginMode, spawn};
 use heap::{HeapEntry, Heap, lock};
-use input::{KeyActions, input};
+use input::{Inputs, input};
 
 
 // pixel (?) width of a block
@@ -29,7 +29,7 @@ fn main() {
         .insert_resource(GravityTimer::new())
         .insert_resource(MovementXTimer::new())
         .insert_resource(MovementYTimer::new())
-        .insert_resource(KeyActions::new())
+        .insert_resource(Inputs::new())
         // make this extensible
         .insert_resource(GridSize { width: 15, height: 25 })
         // placeholder value

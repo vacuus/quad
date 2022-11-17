@@ -5,7 +5,7 @@ use ::core::borrow::Borrow;
 use crate::grid::{GridSize, GridPos};
 use crate::heap::{HeapEntry, Heap};
 use crate::piece::{Block, Origin};
-use crate::input::{KeyAction, KeyActions};
+use crate::input::{Input, Inputs};
 pub use self::types::*;
 
 
@@ -13,7 +13,7 @@ pub fn movement(
     time: Res<Time>,
     heap: Res<Heap>,
     grid_size: Res<GridSize>,
-    keyboard_input: Res<KeyActions>,
+    inputs: Res<Inputs>,
     mut origin: ResMut<Origin>,
     mut gravity_timer: ResMut<GravityTimer>,
     mut move_x_timer: ResMut<MovementXTimer>,
@@ -25,7 +25,7 @@ pub fn movement(
     let grid_width = grid_size.width;
 
     // hard drop
-    if keyboard_input.get_action_state(KeyAction::HardDropJustPressed) {
+    if inputs.get_action_state(Input::HardDropJustPressed) {
         while can_move(&block_pos, grid_width, MoveY::Down1, &heap) {
             block_pos.iter_mut().for_each(|pos| pos.y -= 1);
         }
@@ -34,18 +34,18 @@ pub fn movement(
 
     // get movement input
     let (mut move_x, mut move_y) = {
-        use self::KeyAction::*;
+        use self::Input::*;
 
 
-        let left_press = keyboard_input.get_action_state(LeftPressed);
-        let right_press = keyboard_input.get_action_state(RightPressed);
+        let left_press = inputs.get_action_state(LeftPressed);
+        let right_press = inputs.get_action_state(RightPressed);
         let move_x = match (left_press, right_press) {
             (true, true) | (false, false) => MoveX::Neutral,
             (true, false) => MoveX::Left,
             (false, true) => MoveX::Right,
         };
 
-        if keyboard_input.get_action_state(SoftDropPressed) {
+        if inputs.get_action_state(SoftDropPressed) {
             (move_x, MoveY::Down1)
         } else {
             (move_x, MoveY::Neutral)
