@@ -43,14 +43,14 @@ pub fn spawn(
     spawn_update.clear();
 
     let piece_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
-    let (positions, rotation_origin, color) = match piece_variant_idx {
-        0 => (I_POS, I_ORIGIN, I_COLOR),
-        1 => (O_POS, O_ORIGIN, O_COLOR),
-        2 => (T_POS, T_ORIGIN, T_COLOR),
-        3 => (S_POS, S_ORIGIN, S_COLOR),
-        4 => (Z_POS, Z_ORIGIN, Z_COLOR),
-        5 => (L_POS, L_ORIGIN, L_COLOR),
-        6 => (J_POS, J_ORIGIN, J_COLOR),
+    let (positions, origin_mode, color) = match piece_variant_idx {
+        0 => (I_POS, I_ORIGIN_MODE, I_COLOR),
+        1 => (O_POS, O_ORIGIN_MODE, O_COLOR),
+        2 => (T_POS, T_ORIGIN_MODE, T_COLOR),
+        3 => (S_POS, S_ORIGIN_MODE, S_COLOR),
+        4 => (Z_POS, Z_ORIGIN_MODE, Z_COLOR),
+        5 => (L_POS, L_ORIGIN_MODE, L_COLOR),
+        6 => (J_POS, J_ORIGIN_MODE, J_COLOR),
         _ => unreachable!(),
 //         unimplemented: other variants
     };
@@ -58,8 +58,8 @@ pub fn spawn(
     let shift_x = grid_size.width / 2 - 1;
     let shift_y = grid_size.height;
 
-    origin.pos = rotation_origin.pos + (shift_x, shift_y);
-    origin.mode = rotation_origin.mode;
+    origin.pos = GridPos { x: shift_x, y: shift_y };
+    origin.mode = origin_mode;
 
     for (x, y) in positions {
         let pos = GridPos {
