@@ -14,7 +14,7 @@ use movement::{
 };
 use rotation::rotation;
 use grid::{GridSize, GridPos};
-use piece::{SpawnEvent, MaxY, Origin, OriginMode, spawn};
+use piece::{SpawnEvent, Origin, OriginMode, spawn};
 use heap::{HeapEntry, Heap, lock};
 use input::{KeyActions, input};
 
@@ -37,8 +37,6 @@ fn main() {
             pos: GridPos { x: 0, y: 0 },
             mode: OriginMode::PointCentered,
         })
-        // placeholder value
-        .insert_resource(MaxY { val: 0})
         .add_event::<SpawnEvent>()
         .add_startup_system(setup)
         .add_system(spawn)

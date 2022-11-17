@@ -1,7 +1,6 @@
 mod defaults;
 
 use bevy::prelude::*;
-use bevy::app::AppExit;
 use rand::Rng;
 use crate::grid::{GridSize, GridPos};
 use crate::BLOCK_SIZE;
@@ -14,11 +13,6 @@ pub struct Block;
 
 // the current piece has been locked, and a new piece will be spawned
 pub struct SpawnEvent;
-
-#[derive(Resource)]
-pub struct MaxY {
-    pub val: i16,
-}
 
 #[derive(Clone, Copy, Resource)]
 pub struct Origin {
@@ -39,21 +33,14 @@ pub enum OriginMode {
 
 pub fn spawn(
     mut commands: Commands,
-    max_y: Res<MaxY>,
     grid_size: Res<GridSize>,
     mut origin: ResMut<Origin>,
     spawn_update: EventReader<SpawnEvent>,
-    mut app_exit_notify: EventWriter<AppExit>,
 ) {
     if spawn_update.is_empty() {
         return;
     }
     spawn_update.clear();
-
-    if max_y.val >= grid_size.height - 2 {
-        eprintln!("You lost");
-        app_exit_notify.send(AppExit);
-    }
 
     let piece_variant_idx: u16 = rand::thread_rng().gen_range(0..7);
     let (positions, rotation_origin, color) = match piece_variant_idx {
@@ -69,8 +56,7 @@ pub fn spawn(
     };
 
     let shift_x = grid_size.width / 2 - 1;
-    // let shift_y = grid_size.height - 2;
-    let shift_y = grid_size.height - 7;
+    let shift_y = grid_size.height;
 
     origin.pos = rotation_origin.pos + (shift_x, shift_y);
     origin.mode = rotation_origin.mode;

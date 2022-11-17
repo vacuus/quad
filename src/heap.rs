@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy::app::AppExit;
 use crate::grid::{GridSize, GridPos};
-use crate::piece::{Block, MaxY, SpawnEvent};
+use crate::piece::{Block, SpawnEvent};
 use crate::movement::{MoveY, can_move};
 
 
@@ -19,8 +20,8 @@ pub enum HeapEntry {
 pub fn lock(
     mut commands: Commands,
     grid_size: Res<GridSize>,
-    mut max_y: ResMut<MaxY>,
     mut heap: ResMut<Heap>,
+    mut lose_notify: EventWriter<AppExit>,
     mut spawn_notify: EventWriter<SpawnEvent>,
     tetromino: Query<(Entity, &GridPos), With<Block>>,
 ) {
@@ -34,9 +35,12 @@ pub fn lock(
         return;
     }
 
-    // if this is the new highest y value on the heap, then the player
-    // may lose (in the case that a new piece can't be spawned)
-    max_y.val = block_pos.iter().map(|pos| pos.y).max().unwrap();
+    if block_pos.iter().map(|pos| pos.y).any(|y| y >= grid_size.height) {
+        eprintln!("You lost");
+        lose_notify.send(AppExit);
+        return;
+    }
+
     spawn_notify.send(SpawnEvent);
 
     block_entities

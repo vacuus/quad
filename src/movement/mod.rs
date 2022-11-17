@@ -22,7 +22,6 @@ pub fn movement(
 ) {
     // each block of the piece has, appropriately, the `Block` component
     let mut block_pos = block_pos.iter_mut().collect::<Vec<_>>();
-
     let grid_width = grid_size.width;
 
     // hard drop
@@ -71,7 +70,7 @@ pub fn movement(
     // gravity
     gravity_timer.tick(time.delta());
     if gravity_timer.just_finished() {
-//         move_y.move_down();
+        move_y.move_down();
         gravity_timer.reset();
     }
 
@@ -116,11 +115,11 @@ where
 
             // invalid `x` or `y` will still likely produce a valid index into
             // `heap`; the index is only accurate if `x` and `y` are in bounds
-            (pos.x >= 0) & (pos.x < grid_width) & (pos.y >= 0)
+            pos.x >= 0 && pos.x < grid_width && pos.y >= 0
                 && match heap.get((pos.x + pos.y * grid_width) as usize)
             {
-                Some(HeapEntry::Vacant) => true,
-                _ => false,
+                Some(HeapEntry::Vacant) | None => true,
+                Some(HeapEntry::Occupied) => false,
             }
         })
 }

@@ -7,7 +7,7 @@ use ::core::ops::{Add, AddAssign};
 use ::core::borrow::Borrow;
 
 
-#[derive(Resource)]
+#[derive(Clone, Copy, Resource)]
 pub struct GridSize {
     pub width: i16,
     pub height: i16,
