@@ -55,8 +55,14 @@ pub fn spawn(
 //         unimplemented: other variants
     };
 
-    let shift_x = grid_size.width / 2 - 1;
-    let shift_y = grid_size.height;
+    let min_x = positions.iter().map(|pos| pos.0).min().unwrap();
+    let max_x = positions.iter().map(|pos| pos.0).max().unwrap();
+    let min_y = positions.iter().map(|pos| pos.1).min().unwrap();
+
+    let extent_x = max_x - min_x + 1;
+
+    let shift_x = ((grid_size.width - extent_x) / 2) - min_x;
+    let shift_y = grid_size.height - min_y;
 
     origin.pos = GridPos { x: shift_x, y: shift_y };
     origin.mode = origin_mode;
